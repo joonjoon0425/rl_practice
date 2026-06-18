@@ -1,4 +1,5 @@
 #include "point.hpp"
+#include "qlearning.hpp"
 #include <gridworld.hpp>
 #include <sarsa.hpp>
 #include <print>
@@ -25,17 +26,20 @@ void print_policy_map(const gridworld_2D::sarsa_agent& agent, const gridworld_2D
 }
 
 int main() {
-    int width = 5;
-    int height = 5;
-    gridworld_2D::grid_env env(width, height, {0, 0}, {4, 4}, {2, 2});
-    gridworld_2D::sarsa_agent agent(width, height, gridworld_2D::ACTION_NUM, 0.1, 0.3, 0.9);
+    int width = 10;
+    int height = 10;
+    gridworld_2D::grid_env env(width, height, {0, 0}, {3, 4}, {3, 3});
+    gridworld_2D::sarsa_agent sarsa_agent(width, height, gridworld_2D::ACTION_NUM, 0.3, 0.3, 0.9);
+    gridworld_2D::q_learning_agent q_agent(width, height, gridworld_2D::ACTION_NUM, 0.5, 0.4, 0.9);
 
-    int episodes = 2000;
+    int episodes = 10000;
 
+    // Sarsa agent training
+    std::print("SARSA AGENT TRAINING\n");
     for (int i = 0; i < episodes; i++) {
         env.reset(true);
         auto cur = env.cur();
-        auto act = agent.get_action(cur);
+        auto act = sarsa_agent.get_action(cur);
         bool terminate = false;
 
         float total_reward = 0.0f;
@@ -44,8 +48,8 @@ int main() {
         while (!terminate) {
             auto [next, reward, done] = env.step(act);
             terminate = done;
-            auto act_next = agent.get_action(next);
-            agent.update(cur, act, reward, next, act_next);
+            auto act_next = sarsa_agent.get_action(next);
+            sarsa_agent.update({cur, act, reward, next, act_next, done});
             act = act_next;
             cur = next;
 
@@ -53,13 +57,13 @@ int main() {
             total_steps++;
             total_reward += reward;
         }
-        agent.epsilon() *= 0.99f;
+        sarsa_agent.epsilon() *= (1 - 0.5f / total_steps);
 
         // for checking if the agent is learning well
-        if (i % 50 == 0) std::print("Episode {}: total reward: {}, total steps: {}\n", i, total_reward, total_steps);
+        if (i % 1000 == 0) std::print("Episode {}: total reward: {}, total steps: {}\n", i, total_reward, total_steps);
         
     }
 
-    // print policy nap
-    print_policy_map(agent, env);
+    // print policy map
+    print_policy_map(sarsa_agent, env);
 }

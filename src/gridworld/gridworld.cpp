@@ -9,7 +9,7 @@ namespace gridworld_2D {
     void grid_env::reset(bool random) {
         if (random) {
             do {
-                int rand = std::rand() / width_ * height_;
+                int rand = std::rand();
                 int x = rand % width_;
                 int y = rand % height_;
                 cur_ = {x, y};
