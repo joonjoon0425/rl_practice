@@ -1,5 +1,4 @@
 #include "point.hpp"
-#include "qlearning.hpp"
 #include <gridworld.hpp>
 #include <sarsa.hpp>
 #include <print>
@@ -28,11 +27,11 @@ void print_policy_map(const gridworld_2D::sarsa_agent& agent, const gridworld_2D
 int main() {
     int width = 10;
     int height = 10;
+    float init = 20.f;
     gridworld_2D::grid_env env(width, height, {0, 0}, {3, 4}, {3, 3});
-    gridworld_2D::sarsa_agent sarsa_agent(width, height, gridworld_2D::ACTION_NUM, 0.3, 0.3, 0.9);
-    gridworld_2D::q_learning_agent q_agent(width, height, gridworld_2D::ACTION_NUM, 0.5, 0.4, 0.9);
+    gridworld_2D::sarsa_agent sarsa_agent(width, height, gridworld_2D::ACTION_NUM, 0.3, 0.3, 0.9, init);
 
-    int episodes = 10000;
+    int episodes = 30000;
 
     // Sarsa agent training
     std::print("SARSA AGENT TRAINING\n");
@@ -57,7 +56,7 @@ int main() {
             total_steps++;
             total_reward += reward;
         }
-        sarsa_agent.epsilon() *= (1 - 0.5f / total_steps);
+        sarsa_agent.epsilon() *= 0.9996;
 
         // for checking if the agent is learning well
         if (i % 1000 == 0) std::print("Episode {}: total reward: {}, total steps: {}\n", i, total_reward, total_steps);

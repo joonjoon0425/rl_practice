@@ -28,10 +28,11 @@ void print_policy_map(const gridworld_2D::q_learning_agent& agent, const gridwor
 int main() {
     int width = 10;
     int height = 10;
+    float init = 20.f;
     gridworld_2D::grid_env env(width, height, {0, 0}, {3, 4}, {3, 3});
-    gridworld_2D::q_learning_agent q_agent(width, height, gridworld_2D::ACTION_NUM, 0.5, 0.4, 0.9);
+    gridworld_2D::q_learning_agent q_agent(width, height, gridworld_2D::ACTION_NUM, 1.0, 0.4, 0.9, init);
 
-    int episodes = 10000;
+    int episodes = 40000;
 
     // Q-learning agent training
     std::print("Q_LEARNING AGENT TRAINING\n");
@@ -54,6 +55,7 @@ int main() {
             total_reward += reward;
             total_steps++;
         }
+        q_agent.epsilon() *= 0.9996;
         if (i % 1000 == 0) std::print("Episode {}: total reward: {}, total steps: {}\n", i, total_reward, total_steps);
     }
 

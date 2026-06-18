@@ -1,0 +1,2 @@
+q-learning without optimistic start --> does not converge.
+reason: no tie-break when there are multiple max-valued actions.

@@ -28,7 +28,7 @@ namespace gridworld_2D {
         float alpha_;
         float gamma_;
     public:
-        sarsa_agent(int width, int height, int action_size, float epsilon, float alpha, float gamma);
+        sarsa_agent(int width, int height, int action_size, float epsilon, float alpha, float gamma, float init);
         gridworld_2D::action get_action(state) override;
         void update(const sarsa_transition&) override;
         action greedy_action(const state&) const;

@@ -4,8 +4,8 @@
 #include <sarsa.hpp>
 
 namespace gridworld_2D {
-    sarsa_agent::sarsa_agent(int width, int height, int action_size, float epsilon, float alpha, float gamma)
-    : Q_table(width * height * action_size, 20.f), // optimistic initialization
+    sarsa_agent::sarsa_agent(int width, int height, int action_size, float epsilon, float alpha, float gamma, float init)
+    : Q_table(width * height * action_size, init),
       width_(width),
       height_(height),
       action_size_(action_size),
@@ -54,16 +54,19 @@ namespace gridworld_2D {
 
     action sarsa_agent::greedy_action(const state& cur) const {
         auto actions = grid_env::get_possible_actions(width_, height_, cur);
-        action ret = *actions.begin();
         float max = -std::numeric_limits<float>::infinity();
+        std::vector<action> max_actions;
 
         for (auto act: actions) {
             if (Q_table[idx(cur, act)] > max) {
                 max = Q_table[idx(cur, act)];
-                ret = act;
+                max_actions.clear();
+                max_actions.push_back(act);
+            } else if (Q_table[idx(cur, act)] == max) {
+                max_actions.push_back(act);
             }
         }
 
-        return ret;
+        return max_actions[std::rand() % max_actions.size()];
     }
 }
