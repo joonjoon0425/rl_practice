@@ -32,10 +32,10 @@ namespace gridworld_2D {
         float reward = -1.0f;
         bool done = false;
         if (cur_ == goal_) {
-            reward = 10.0f;
+            reward = 100.0f;
             done = true;
         } else if (cur_ == trap_) {
-            reward = -8.0f;
+            reward = -100.0f;
             done = true;
         }
 
