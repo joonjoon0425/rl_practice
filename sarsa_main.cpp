@@ -3,7 +3,7 @@
 #include <sarsa.hpp>
 #include <print>
 
-void print_policy_map(const gridworld_2D::sarsa_agent& agent, const gridworld_2D::grid_env& env) {
+void print_policy_map(const gridworld_2D::grid_sarsa_agent& agent, const gridworld_2D::grid_env& env) {
     const char* symbol[] = {"↑", "↓", "←", "→"};
     gridworld_2D::point p(0, 0, env.width(), env.height());
     
@@ -28,8 +28,8 @@ int main() {
     int width = 10;
     int height = 10;
     float init = 0.f;
-    gridworld_2D::grid_env env(width, height, {0, 0}, {3, 4}, {3, 3});
-    gridworld_2D::sarsa_agent sarsa_agent(width, height, gridworld_2D::ACTION_NUM, 1.0, 0.3, 0.9, init);
+    gridworld_2D::grid_env env(width, height, {0, 0, width, height}, {3, 4, width, height}, {3, 3, width, height});
+    gridworld_2D::grid_sarsa_agent sarsa_agent(width, height, gridworld_2D::ACTION_NUM, 1.0, 0.3, 0.9, init);
 
     int episodes = 10000;
 

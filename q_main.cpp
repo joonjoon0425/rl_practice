@@ -5,7 +5,7 @@
 
 void print_policy_map(const gridworld_2D::grid_q_agent& agent, const gridworld_2D::grid_env& env) {
     const char* symbol[] = {"↑", "↓", "←", "→"};
-    gridworld_2D::point p;
+    gridworld_2D::point p(0, 0, env.width(), env.height());
     
     for (int y = env.height() - 1; y >= 0; y--) {
         for (int x = 0; x < env.width(); x++) {
@@ -31,7 +31,7 @@ int main() {
     gridworld_2D::grid_env env(width, height, {0, 0, width, height}, {3, 4, width, height}, {3, 3, width, height});
     gridworld_2D::grid_q_agent q_agent(width, height, gridworld_2D::ACTION_NUM, 1.0, 0.4, 0.9, init);
 
-    int episodes = 1000000;
+    int episodes = 10000;
 
     // Q-learning agent training
     std::print("Q_LEARNING AGENT TRAINING\n");

@@ -7,9 +7,10 @@ project(rl_practice)
 add_library(gridworld
     src/gridworld/gridworld.cpp
     src/gridworld/qlearning.cpp
+    src/gridworld/sarsa.cpp
 )
 
-# add_executable(sarsa_main sarsa_main.cpp)
+add_executable(sarsa_main sarsa_main.cpp)
 add_executable(q_main q_main.cpp)
 
 target_include_directories(gridworld PUBLIC
@@ -17,5 +18,5 @@ target_include_directories(gridworld PUBLIC
     include/gridworld
 )
 
-# target_link_libraries(sarsa_main gridworld)
+target_link_libraries(sarsa_main gridworld)
 target_link_libraries(q_main gridworld)

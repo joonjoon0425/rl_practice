@@ -1,24 +1,24 @@
-#ifndef _Q_LEARNING_HPP_
-#define _Q_LEARNING_HPP_
+#ifndef _GRIDWORLD_SARSA_HPP_
+#define _GRIDWORLD_SARSA_HPP_
 
-#include <gridworld.hpp>
-#include <q_agent.hpp>
+#include "gridworld.hpp"
+#include <sarsa_agent.hpp>
 
 #include <cassert>
 
 namespace gridworld_2D {
-    class grid_q_agent : public q_agent<grid_env> {
+    class grid_sarsa_agent : public sarsa_agent<grid_env> {
         int width_;
         int height_;
         float epsilon_;
 
     public:
-        grid_q_agent(int width, int height, int action_size, float epsilon, float alpha, float gamma, float init);
+        grid_sarsa_agent(int width_, int height_, int action_size, float epsilon, float alpha, float gamma, float init);
         grid_env::action_t get_action(const grid_env::state_t&) const override;
-        
-        float& epsilon(float val) {return epsilon_ = val;};
+
+        float& epsilon(float val) {return epsilon_ = val;}
         float& epsilon() {return epsilon_;}
-        
+        // float epsilon() const {return epsilon_;}
         int idx(const grid_env::state_t& state, const grid_env::action_t& act) const override {
             int act_int = static_cast<int>(act);
             assert(state.x_ >= 0 && state.x_ < width_  && "state.x가 범위를 벗어남!");
@@ -28,4 +28,5 @@ namespace gridworld_2D {
         }
     };
 }
+
 #endif

@@ -4,7 +4,8 @@
 namespace gridworld_2D {
     grid_env::grid_env(int width, int height, grid_state start, grid_state goal, grid_state trap)
     : width_(width), height_(height),
-      start_(start), goal_(goal), trap_(trap) {}
+      start_(start), goal_(goal), trap_(trap),
+      cur_(start) {}
 
     void grid_env::reset(bool random) {
         if (random) {
