@@ -22,10 +22,6 @@ namespace gridworld_2D {
         bool operator==(const point& p) const {
             return p.x_ == x_ && p.y_ ==y_;
         }
-
-        operator int() const {
-            return y_ * max_x_ + x_;
-        }
     };
 }
 

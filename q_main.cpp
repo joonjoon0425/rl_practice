@@ -36,7 +36,7 @@ int main() {
     // Q-learning agent training
     std::print("Q_LEARNING AGENT TRAINING\n");
     for (int i = 0; i < episodes; i++) {
-        env.reset(false);
+        env.reset(true);
         auto cur = env.cur();
         bool terminate = false;
 

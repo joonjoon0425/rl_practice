@@ -43,6 +43,7 @@ int main() {
         auto cur = env.cur();
         auto act = mc_agent.random_action(cur);
         bool terminate = false;
+        bool timeout = false;
 
         float total_reward = 0.f;
         int total_steps = 0;
@@ -60,15 +61,25 @@ int main() {
             total_reward += reward;
             total_steps++;
 
-            if (total_steps > 2000) {
+            if (total_steps > 1000) {
+                timeout = true;
+                episodes--;
                 break;
             }
         }
         mc_agent.epsilon() *= 0.9999;
-        if (i % 100 == 0) std::print("Episode {}: total reward: {}, total steps: {}\n", i, total_reward, total_steps);
         
-        mc_agent.update({states, actions, rewards});
-        
+        if (i % 1000 == 0) {
+            std::print("Episode {}: total reward: {}, total steps: {}\n", i, total_reward, total_steps);
+           
+        }
+
+        if (!timeout) {
+            mc_agent.update({states, actions, rewards});
+        } else {
+            // std::print("timeout\n");
+        }
+
         states.clear();
         actions.clear();
         rewards.clear();

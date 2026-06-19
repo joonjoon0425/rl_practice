@@ -47,7 +47,7 @@ public:
         std::vector<float> G(t.actions.size() + 1, 0);
         int total_steps = t.actions.size();
 
-        std::unordered_set<int> seen;
+        std::vector<int> seen(state_size_ * action_size_, 0);
         
         typename Env::state_t cur_state = t.states[0];
         typename Env::action_t cur_action;
@@ -59,10 +59,10 @@ public:
             cur_state = t.states[i];
             cur_action = t.actions[i];
             int cur_idx = idx(cur_state, cur_action);
-            if (every_visit_ || seen.find(cur_idx) == seen.end()) {
+            if (every_visit_ || seen[cur_idx] == 0) {
                 N_table_[cur_idx]++;
                 Q_table_[cur_idx] += (G[i] - Q_table_[cur_idx]) / N_table_[cur_idx];
-                seen.insert(cur_idx);
+                seen[cur_idx] = 1;
             }
         }
 
