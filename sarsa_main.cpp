@@ -5,12 +5,12 @@
 
 void print_policy_map(const gridworld_2D::sarsa_agent& agent, const gridworld_2D::grid_env& env) {
     const char* symbol[] = {"↑", "↓", "←", "→"};
-    gridworld_2D::point p;
+    gridworld_2D::point p(0, 0, env.width(), env.height());
     
     for (int y = env.height() - 1; y >= 0; y--) {
         for (int x = 0; x < env.width(); x++) {
-            p.x = x;
-            p.y = y;
+            p.x_ = x;
+            p.y_ = y;
             
             if (p == env.trap()) {
                 std::print("T\t");

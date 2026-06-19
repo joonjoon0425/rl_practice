@@ -1,24 +1,23 @@
 #include "point.hpp"
 #include "qlearning.hpp"
 #include <gridworld.hpp>
-#include <sarsa.hpp>
 #include <print>
 
-void print_policy_map(const gridworld_2D::q_learning_agent& agent, const gridworld_2D::grid_env& env) {
+void print_policy_map(const gridworld_2D::grid_q_agent& agent, const gridworld_2D::grid_env& env) {
     const char* symbol[] = {"↑", "↓", "←", "→"};
     gridworld_2D::point p;
     
     for (int y = env.height() - 1; y >= 0; y--) {
         for (int x = 0; x < env.width(); x++) {
-            p.x = x;
-            p.y = y;
+            p.x_ = x;
+            p.y_ = y;
             
             if (p == env.trap()) {
                 std::print("T\t");
             } else if (p == env.goal()) {
                 std::print("G\t");
             } else {
-                std::print("{}\t", /*symbol[static_cast<int>(agent.greedy_action(p))]*/ agent.max_q(p));
+                std::print("{}\t", symbol[static_cast<int>(agent.greedy_action(p))]/*agent.max_q(p)*/);
             }
         }
         std::print("\n");
@@ -29,8 +28,8 @@ int main() {
     int width = 10;
     int height = 10;
     float init = 0.f;
-    gridworld_2D::grid_env env(width, height, {0, 0}, {3, 4}, {3, 3});
-    gridworld_2D::q_learning_agent q_agent(width, height, gridworld_2D::ACTION_NUM, 1.0, 0.4, 0.9, init);
+    gridworld_2D::grid_env env(width, height, {0, 0, width, height}, {3, 4, width, height}, {3, 3, width, height});
+    gridworld_2D::grid_q_agent q_agent(width, height, gridworld_2D::ACTION_NUM, 1.0, 0.4, 0.9, init);
 
     int episodes = 1000000;
 

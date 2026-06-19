@@ -1,20 +1,18 @@
+#include "gridworld.hpp"
 #include <qlearning.hpp>
 #include <cstdlib>
 #include <limits>
 
 namespace gridworld_2D {
-    q_learning_agent::q_learning_agent(int width, int height, int action_size, float epsilon, float alpha, float gamma, float init)
-    : Q_table(width * height * action_size, init),
-      width_(width),
+    grid_q_agent::grid_q_agent(int width, int height, int action_size, float epsilon, float alpha, float gamma, float init)
+    : width_(width),
       height_(height),
-      action_size_(action_size),
       epsilon_(epsilon),
-      alpha_(alpha),
-      gamma_(gamma) {}
+      q_agent(width * height, action_size, alpha, gamma, init) {}
 
 
-    action q_learning_agent::get_action(state cur) {
-        action ret_action;
+    grid_env::action_t grid_q_agent::get_action(const grid_env::state_t& cur) const {
+        grid_env::action_t ret_action;
         float rand_val = static_cast<float>(std::rand()) / RAND_MAX;
 
         if (rand_val < epsilon_) {
@@ -26,48 +24,5 @@ namespace gridworld_2D {
         }
 
         return ret_action;
-    }
-
-    void q_learning_agent::update(const q_learning_transition& t) {
-        float next_q = t.done ? 0.0f : max_q(t.s_next);
-        float target = t.reward + next_q;
-        Q_table[idx(t.s, t.a)] += alpha_ * (target - Q_table[idx(t.s, t.a)]);
-    }
-
-    action q_learning_agent::random_action(const state& cur) const {
-        auto actions = grid_env::get_possible_actions(width_, height_, cur);
-        int rand_idx = std::rand() % actions.size();
-        return *std::next(actions.begin(), rand_idx);
-    }
-
-    action q_learning_agent::greedy_action(const state& cur) const {
-        auto actions = grid_env::get_possible_actions(width_, height_, cur);
-        float max = -std::numeric_limits<float>::infinity();
-        std::vector<action> max_actions;
-
-        for (auto act: actions) {
-            if (Q_table[idx(cur, act)] > max) {
-                max = Q_table[idx(cur, act)];
-                max_actions.clear();
-                max_actions.push_back(act);
-            } else if (Q_table[idx(cur, act)] == max) {
-                max_actions.push_back(act);
-            }
-        }
-
-        return max_actions[std::rand() % max_actions.size()];
-    }
-
-    float q_learning_agent::max_q(const state& cur) const {
-        auto actions = grid_env::get_possible_actions(width_, height_, cur);
-        float max = -std::numeric_limits<float>::infinity();
-
-        for (auto act: actions) {
-            if (Q_table[idx(cur, act)] > max) {
-                max = Q_table[idx(cur, act)];
-            }
-        }
-
-        return max;
     }
 }
