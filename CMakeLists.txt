@@ -6,8 +6,8 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 project(rl_practice)
 add_library(gridworld
     src/gridworld/gridworld.cpp
-    src/gridworld/sarsa.cpp
     src/gridworld/qlearning.cpp
+    src/gridworld/sarsa.cpp
 )
 
 add_executable(sarsa_main sarsa_main.cpp)

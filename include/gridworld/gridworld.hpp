@@ -7,32 +7,41 @@
 
 namespace gridworld_2D{
     constexpr size_t ACTION_NUM = 4;
-    using state = point;
+    using grid_state = point;
 
-    enum class action: int {up, down, left, right};
+    enum class grid_action: int {up, down, left, right};
 
-    class grid_env : public environment<state, action> {
-        state cur_;
-        state start_;
-        state goal_;
-        state trap_;
+    class grid_env : public environment<grid_state, grid_action, grid_env> {
+        grid_state cur_;
+        grid_state start_;
+        grid_state goal_;
+        grid_state trap_;
 
         int width_;
         int height_;
         
     public:
-        grid_env(int width, int height, state start, state goal, state trap);
+        grid_env(int width, int height, grid_state start, grid_state goal, grid_state trap);
         void reset(bool random = false);
-        std::tuple<state, float, bool> step(action);
-
-        static std::set<action> get_possible_actions(int, int, state);
+        std::tuple<grid_state, float, bool> step(grid_action);
         
-        state cur() const {return cur_;}
-        state trap() const {return trap_;}
-        state goal() const {return goal_;}
+        grid_state cur() const {return cur_;}
+        grid_state trap() const {return trap_;}
+        grid_state goal() const {return goal_;}
 
         int width() const {return width_;}
         int height() const {return height_;}
+
+        static std::set<grid_env::action_t> impl_get_possible_actions(const grid_env::state_t& state) {
+            std::set<grid_env::action_t> actions{grid_action::up, grid_action::down, grid_action::left, grid_action::right};
+            if (state.x_ == state.max_x_ - 1) actions.erase(grid_action::right);
+            else if (state.x_ == 0) actions.erase(grid_action::left);
+            
+            if (state.y_ == state.max_y_ - 1) actions.erase(grid_action::up);
+            else if (state.y_ == 0) actions.erase(grid_action::down);
+
+            return actions;
+        }
     };
 }
 
