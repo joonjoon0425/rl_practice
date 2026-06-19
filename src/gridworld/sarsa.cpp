@@ -69,4 +69,17 @@ namespace gridworld_2D {
 
         return max_actions[std::rand() % max_actions.size()];
     }
+
+    int sarsa_agent::max_q(const state& cur) const {
+        auto actions = grid_env::get_possible_actions(width_, height_, cur);
+        float max = -std::numeric_limits<float>::infinity();
+
+        for (auto act: actions) {
+            if (Q_table[idx(cur, act)] > max) {
+                max = Q_table[idx(cur, act)];
+            }
+        }
+
+        return max;
+    }
 }

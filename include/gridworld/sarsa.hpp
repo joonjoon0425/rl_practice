@@ -32,7 +32,8 @@ namespace gridworld_2D {
         gridworld_2D::action get_action(state) override;
         void update(const sarsa_transition&) override;
         action greedy_action(const state&) const;
-        
+        int max_q(const state& cur) const;
+
         float& epsilon(float val);
         float& epsilon();
 

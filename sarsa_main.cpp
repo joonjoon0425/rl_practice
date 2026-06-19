@@ -17,7 +17,7 @@ void print_policy_map(const gridworld_2D::sarsa_agent& agent, const gridworld_2D
             } else if (p == env.goal()) {
                 std::print("G\t");
             } else {
-                std::print("{}\t", symbol[static_cast<int>(agent.greedy_action(p))]);
+                std::print("{}, {}\t", symbol[static_cast<int>(agent.greedy_action(p))], agent.max_q(p));
             }
         }
         std::print("\n");
@@ -27,11 +27,11 @@ void print_policy_map(const gridworld_2D::sarsa_agent& agent, const gridworld_2D
 int main() {
     int width = 10;
     int height = 10;
-    float init = 20.f;
+    float init = 0.f;
     gridworld_2D::grid_env env(width, height, {0, 0}, {3, 4}, {3, 3});
-    gridworld_2D::sarsa_agent sarsa_agent(width, height, gridworld_2D::ACTION_NUM, 0.3, 0.3, 0.9, init);
+    gridworld_2D::sarsa_agent sarsa_agent(width, height, gridworld_2D::ACTION_NUM, 1.0, 0.3, 0.9, init);
 
-    int episodes = 30000;
+    int episodes = 10000;
 
     // Sarsa agent training
     std::print("SARSA AGENT TRAINING\n");
@@ -65,4 +65,5 @@ int main() {
 
     // print policy map
     print_policy_map(sarsa_agent, env);
+    std::print("epsilon: {}\n", sarsa_agent.epsilon());
 }

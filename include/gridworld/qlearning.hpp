@@ -30,7 +30,7 @@ namespace gridworld_2D {
         gridworld_2D::action get_action(state) override;
         void update(const q_learning_transition&) override;
         action greedy_action(const state&) const;
-        int max_q(const state&) const;
+        float max_q(const state&) const;
         
         float& epsilon(float val) {return epsilon_ = val;};
         float& epsilon() {return epsilon_;}
