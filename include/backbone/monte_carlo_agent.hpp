@@ -32,7 +32,7 @@ protected:
     float epsilon_;
 
 public:
-    monte_carlo_agent(int state_size, int action_size, bool every_visit, float epsilon, float gamma, float init = 0.f)
+    monte_carlo_agent(int state_size, int action_size, float epsilon, float gamma, bool every_visit, float init = 0.f)
     : state_size_(state_size),
       action_size_(action_size),
       every_visit_(every_visit),
