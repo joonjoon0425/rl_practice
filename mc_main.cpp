@@ -1,9 +1,9 @@
 #include "point.hpp"
-#include "qlearning.hpp"
+#include "mc.hpp"
 #include <gridworld.hpp>
 #include <print>
 
-void print_policy_map(const gridworld_2D::grid_q_agent& agent, const gridworld_2D::grid_env& env) {
+void print_policy_map(const gridworld_2D::grid_mc_agent& agent, const gridworld_2D::grid_env& env) {
     const char* symbol[] = {"↑", "↓", "←", "→"};
     gridworld_2D::point p(0, 0, env.width(), env.height());
     
@@ -29,36 +29,52 @@ int main() {
     int height = 15;
     float init = 0.f;
     gridworld_2D::grid_env env(width, height, {0, 0, width, height}, {10, 4, width, height}, {10, 3, width, height});
-    gridworld_2D::grid_q_agent q_agent(width, height, gridworld_2D::ACTION_NUM, 1.0, 0.4, 0.9, init);
+    gridworld_2D::grid_mc_agent mc_agent(width, height, gridworld_2D::ACTION_NUM, 1.0, 0.9, false);
 
     int episodes = 100000;
+    std::vector<gridworld_2D::grid_env::state_t> states;
+    std::vector<gridworld_2D::grid_env::action_t> actions;
+    std::vector<float> rewards;
 
-    // Q-learning agent training
-    std::print("Q_LEARNING AGENT TRAINING\n");
+    // mc agent training
+    std::print("MONTE CARLO (ON-POLICY) AGENT TRAINING\n");
     for (int i = 0; i < episodes; i++) {
-        env.reset(false);
+        env.reset(true);
         auto cur = env.cur();
+        auto act = mc_agent.random_action(cur);
         bool terminate = false;
 
         float total_reward = 0.f;
         int total_steps = 0;
 
         while (!terminate) {
-            auto act = q_agent.get_action(cur);
-            auto [s_next, reward, done] = env.step(act);
-            q_agent.update({cur, act, reward, s_next, done});
+            states.push_back(cur);
+            actions.push_back(act);
+            auto [s_next, reward, done] = env.step(act);    
             cur = s_next;
+            act = mc_agent.get_action(cur);
+            rewards.push_back(reward);
             terminate = done;
 
             // for check
             total_reward += reward;
             total_steps++;
+
+            if (total_steps > 2000) {
+                break;
+            }
         }
-        q_agent.epsilon() *= 0.9999;
-        if (i % 1000 == 0) std::print("Episode {}: total reward: {}, total steps: {}\n", i, total_reward, total_steps);
+        mc_agent.epsilon() *= 0.9999;
+        if (i % 100 == 0) std::print("Episode {}: total reward: {}, total steps: {}\n", i, total_reward, total_steps);
+        
+        mc_agent.update({states, actions, rewards});
+        
+        states.clear();
+        actions.clear();
+        rewards.clear();
     }
 
     // print policy map
-    print_policy_map(q_agent, env);
+    print_policy_map(mc_agent, env);
     
 }

@@ -5,3 +5,5 @@ plus, due to the maxmization bias, it has slow convergence.
 
 big epsilon on the initialization is important for searching!
 
+---> My mistake with q-learning was that I used the wrong signature for max_q function.
+It was returning int value before I fixed it.

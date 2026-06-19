@@ -17,7 +17,7 @@ void print_policy_map(const gridworld_2D::grid_sarsa_agent& agent, const gridwor
             } else if (p == env.goal()) {
                 std::print("G\t");
             } else {
-                std::print("{}, {}\t", symbol[static_cast<int>(agent.greedy_action(p))], agent.max_q(p));
+                std::print("{}\t", symbol[static_cast<int>(agent.greedy_action(p))]);
             }
         }
         std::print("\n");
