@@ -29,7 +29,7 @@ int main() {
     int height = 15;
     float init = 0.f;
     gridworld_2D::grid_env env(width, height, {0, 0, width, height}, {10, 4, width, height}, {10, 3, width, height});
-    gridworld_2D::grid_mc_agent mc_agent(width, height, gridworld_2D::ACTION_NUM, 1.0, 0.9, false);
+    gridworld_2D::grid_mc_agent mc_agent(width, height, gridworld_2D::ACTION_NUM, 1.0, 0.9, true);
 
     int episodes = 100000;
     std::vector<gridworld_2D::grid_env::state_t> states;

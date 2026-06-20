@@ -11,6 +11,12 @@ add_library(gridworld
     src/gridworld/mc.cpp
 )
 
+add_library(gridworld_refactor
+    src/gridworld_refactor/gridworld.cpp
+)
+
+add_executable(refactor_main refactor_main.cpp)
+
 add_executable(sarsa_main sarsa_main.cpp)
 add_executable(q_main q_main.cpp)
 add_executable(mc_main mc_main.cpp)
@@ -20,6 +26,13 @@ target_include_directories(gridworld PUBLIC
     include/gridworld
 )
 
+target_include_directories(gridworld_refactor PUBLIC
+    include/backbone_refactor
+    include/gridworld_refactor
+)
+
 target_link_libraries(sarsa_main gridworld)
 target_link_libraries(q_main gridworld)
 target_link_libraries(mc_main gridworld)
+
+target_link_libraries(refactor_main gridworld_refactor)
