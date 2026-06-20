@@ -25,7 +25,7 @@ std::shared_ptr<agent<Env>> create_agent(Env& env, algo_type a, policy_type p, f
     if (a == algo_type::TD) {
         if (p == policy_type::ON_POLICY) {
             t_p = std::make_unique<epsilon_greedy_policy<Env>>(env, epsilon);
-            buffer = std::make_unique<nstep_buffer<Env>>(2);
+            buffer = std::make_unique<nstep_buffer<Env>>(1);
             updater = std::make_unique<sarsa_updater<Env>>(env);
         } else if (p == policy_type::OFF_POLICY) {
             t_p = std::make_unique<greedy_policy<Env>>(env);

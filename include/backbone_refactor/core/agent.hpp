@@ -40,18 +40,22 @@ public:
     void observe(const transition<Env>& data) {
         buffer_->push_back(data);
         if (buffer_->ready()) {
-            std::cout << "DEBUG: READY FOR UPDATE\n";
+            //std::cout << "DEBUG: READY FOR UPDATE\n";
             updater_->update(Q_table_, buffer_->pop(), gamma_, alpha_);
         }
     }
 
-    Env::action_t get_behavior_action(const Env::state_t& state) {
-        assert(behavior_policy_ && "behavior policy is not used here");
-        return behavior_policy_->get_action(Q_table_, state);
+    Env::action_t sample_action(const Env::state_t& state) {
+        if (behavior_policy_) return behavior_policy_->get_action(Q_table_, state);
+        return target_policy_->get_action(Q_table_, state);
     }
 
-    Env::action_t get_target_action(const Env::state_t& state) {
+    Env::action_t predict_action(const Env::state_t& state) {
         return target_policy_->get_action(Q_table_, state);
+    }
+
+    void flush_buffer() {
+        buffer_->clear();
     }
 
 };

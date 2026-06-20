@@ -13,6 +13,8 @@ struct transition {
 
     bool done_;
 
+    // for sarsa
+    Env::action_t next_a_;
     // for off-policy method
     float rho_ = 1.0f;
 };
@@ -35,6 +37,8 @@ public:
     void push_back(const transition<Env>& data) {
         data_.push_back(data);
     }
+
+    void clear() { data_.clear(); }
 
 
     

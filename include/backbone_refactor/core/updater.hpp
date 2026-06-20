@@ -12,7 +12,7 @@ public:
     virtual ~updater() = default;
 
     updater(Env& env) : env_(env) {}
-    virtual void update(std::vector<float> Q_table, const std::vector<transition<Env>>& data, float gamma, float alpha) = 0;
+    virtual void update(std::vector<float>& Q_table, const std::vector<transition<Env>>& data, float gamma, float alpha) = 0;
 };
 
 

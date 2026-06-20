@@ -21,7 +21,7 @@ public:
     }
 
     bool ready() const override {
-        if (this->data_.size() == steps_) {
+        if (this->data_.size() >= steps_) {
             //std::cout << "DEBUG: READY FOR UPDATE\n";
             return true;
         }

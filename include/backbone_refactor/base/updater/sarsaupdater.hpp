@@ -9,16 +9,16 @@ class sarsa_updater : public updater<Env> {
 public:
     sarsa_updater(Env& env) : updater<Env>(env) {}
 
-    void update(std::vector<float> Q_table, const std::vector<transition<Env>>& data, float gamma, float alpha) override {
+    void update(std::vector<float>& Q_table, const std::vector<transition<Env>>& data, float gamma, float alpha) override {
         // requires two transition data
-        assert(data.size() == 2 && "sarsa requires two update data");
+        assert(data.size() == 1 && "sarsa requires one update data");
         
         typename Env::state_t s = data[0].s_;
         typename Env::action_t a = data[0].a_;
         float reward = data[0].reward_;
         typename Env::state_t s_next = data[0].next_s_;
-        typename Env::action_t a_next = data[1].a_;
-        bool done = data[1].done_;
+        typename Env::action_t a_next = data[0].next_a_;
+        bool done = data[0].done_;
 
         int cur_index = this->env_.idx(s, a);
         int next_index = this->env_.idx(s_next, a_next);

@@ -12,7 +12,7 @@ class qlearning_updater : public updater<Env> {
 public:
     qlearning_updater(Env& env) : updater<Env>(env) {}
 
-    void update(std::vector<float> Q_table, const std::vector<transition<Env>>& data, float gamma, float alpha) override {
+    void update(std::vector<float>& Q_table, const std::vector<transition<Env>>& data, float gamma, float alpha) override {
         // requires two transition data
         assert(data.size() == 1 && "qlearning requires one update data");
         
