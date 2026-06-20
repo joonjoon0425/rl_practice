@@ -12,8 +12,7 @@
 
 template <Environment Env>
 class agent {
-//protected:
-public:
+protected:
     Env& env_;
     std::vector<float> Q_table_;
 
