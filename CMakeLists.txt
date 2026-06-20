@@ -8,11 +8,13 @@ add_library(gridworld
     src/gridworld/gridworld.cpp
 )
 
-add_executable(refactor_main refactor_main.cpp)
+add_executable(q_main q_main.cpp)
+add_executable(s_main s_main.cpp)
 
 target_include_directories(gridworld PUBLIC
     include/backbone
     include/gridworld
 )
 
-target_link_libraries(refactor_main gridworld)
+target_link_libraries(q_main gridworld)
+target_link_libraries(s_main gridworld)

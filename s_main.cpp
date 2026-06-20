@@ -1,24 +1,37 @@
+#include "core/schedulable.hpp"
+#include "core/schedular.hpp"
+#include <cassert>
 #include <gridworld.hpp>
+#include <limits>
+#include <memory>
 #include <register.hpp>
 #include <print>
 
 void print_policy_map(std::shared_ptr<agent<gridworld::env_grid2D>> agent, const gridworld::env_grid2D& env);
 
 int main() {
-    int w = 10;
-    int h = 10;
+    int w = 15;
+    int h = 15;
     float init = 0.0f;
 
-    gridworld::env_grid2D env(w, h, {0, 0}, {8, 8}, {7, 8});
+    gridworld::env_grid2D env(w, h, {0, 0}, {3, 5}, {3, 3});
     // SARSA
-    auto agent = create_agent(env, algo_type::TD, policy_type::ON_POLICY, 0.1, 0.9, 0.5, 20.0f);
-    // QLEARN
-    //auto agent = create_agent(env, algo_type::TD, policy_type::OFF_POLICY, 0.1);
-    
-    int episodes = 100000;
+    auto agent = create_agent(env, algo_type::TD, policy_type::ON_POLICY, 1.0);
+    auto ptr = std::dynamic_pointer_cast<epsilon_schedulable>(agent->behavior_policy());
+    assert(ptr != nullptr && "dynamic cast failure");
+
+    schedular<float> eps_exp_sche((ptr->epsilon()), 0.00f,
+        [](float val, int _) {
+            return val * 0.999954f;
+        }
+    );
+
+    int episodes = 1000000;
+
+    int max_stepped = std::numeric_limits<int>::min();
 
     for (int i = 0; i < episodes; i++) {
-        auto cur = env.reset(false);
+        auto cur = env.reset(true);
         auto act = agent->sample_action(cur);
         bool terminate = false;
 
@@ -26,7 +39,6 @@ int main() {
         float total_reward = 0.f;
 
         while (!terminate) {
-//-----------------------------------------
             auto [next_s, reward, done] = env.step(cur, act);
             auto next_a = agent->sample_action(next_s);
 
@@ -34,26 +46,25 @@ int main() {
             
             act = next_a;
             
-//-----------------------------------------
-            // auto a = agent->sample_action(cur);
-            // auto [next_s, reward, done] = env.step(cur, a);
-            // agent->observe({cur, a, reward, next_s, done});
-//-----------------------------------------
+
             cur = next_s;
             terminate = done;
             
             total_steps++;
             total_reward += reward;
         }
+        eps_exp_sche.step(i);
 
         agent->flush_buffer();
         
+        max_stepped = max_stepped < total_steps ? total_steps : max_stepped;
 
-        if ((i + 1) % 100 == 0) {
+        if ((i + 1) % 10000 == 0) {
             std::print("EPISODE {}: TOTAL STEPS = {}, TOTAL REWARD = {}\n", i + 1, total_steps, total_reward);
         }
     }
-
+    std::print("epsilon: {}\n", eps_exp_sche.value());
+    std::println("MAXIMUM STEPS: {}", max_stepped);
     print_policy_map(agent, env);
 }
 
@@ -71,7 +82,7 @@ void print_policy_map(std::shared_ptr<agent<gridworld::env_grid2D>> agent, const
             } else if (p == env.goal()) {
                 std::print("G\t");
             } else {
-                std::print("{}\t", symbol[static_cast<int>(agent->predict_action(p))]/*agent.max_q(p)*/);
+                std::print("{}\t", symbol[static_cast<int>(agent->greedy_action(p))], agent->max_q(p));
             }
         }
         std::print("\n");
