@@ -22,7 +22,7 @@ public:
                 max = q;
                 max_actions.clear();
                 max_actions.push_back(act);
-            } else if (q == max) {
+            } else if (max - q < 1e-5f) {
                 max_actions.push_back(act);
             }
         }

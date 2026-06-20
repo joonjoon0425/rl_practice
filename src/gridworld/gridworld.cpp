@@ -21,7 +21,7 @@ namespace gridworld {
                 cur_ = {x, y};
             } while (cur_ == trap_ || cur_ == goal_);
         } else {
-            cur_ = start_;
+            return start_;
         }
 
         return cur_;
@@ -37,10 +37,10 @@ namespace gridworld {
             case action_t::RIGHT: cur_.x_++; break;
         };
 
-        float reward = -1.0f;
+        float reward = -0.2f;
         bool done = false;
         if (cur_ == goal_) {
-            reward = 10.0f;
+            reward = 15.0f;
             done = true;
         } else if (cur_ == trap_) {
             reward = -10.0f;

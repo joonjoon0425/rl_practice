@@ -2,6 +2,7 @@
 #define _POLICY_HPP_
 
 #include <vector>
+#include "schedulable.hpp"
 
 template <typename Env>
 class policy {

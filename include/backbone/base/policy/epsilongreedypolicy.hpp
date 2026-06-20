@@ -3,11 +3,12 @@
 
 #include "core/policy.hpp"
 #include <set>
+#include <algorithm>
 #include <cstdlib>
 #include <limits>
 
 template <typename Env>
-class epsilon_greedy_policy : public policy<Env> {
+class epsilon_greedy_policy : public policy<Env>, public epsilon_schedulable {
 protected:
     float epsilon_;
 
@@ -15,6 +16,8 @@ public:
     epsilon_greedy_policy(Env& env, float epsilon) : policy<Env>(env), epsilon_(epsilon) {}
 
     float& epsilon() {return epsilon_;}
+    float epsilon() const {return epsilon_;}
+    void epsilon(float val) {epsilon_ = val;}
 
     Env::action_t get_action(const std::vector<float>& Q_table_, const Env::state_t& state) const override {
         typename Env::action_t ret_action;
@@ -42,7 +45,7 @@ public:
                 max = q;
                 max_actions.clear();
                 max_actions.push_back(act);
-            } else if (q == max) {
+            } else if (max - q < 1e-7f) {
                 max_actions.push_back(act);
             }
         }
@@ -67,12 +70,18 @@ public:
                 max = q;
                 max_actions.clear();
                 max_actions.push_back(act);
-            } else if (q == max) {
+            } else if (max - q < 1e-7f) {
                 max_actions.push_back(act);
             }
         }
 
-        return 1 + epsilon_ * (1 / actions.size()  - 1 / max_actions.size());
+        bool is_greedy = std::find(max_actions.begin(), max_actions.end(), action) != max_actions.end();
+
+        float prob = epsilon_ / actions.size();
+        if (is_greedy) {
+            prob += (1.f - epsilon_) / max_actions.size();
+        }
+        return prob;
     };
 };
 
