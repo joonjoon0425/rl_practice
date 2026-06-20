@@ -20,7 +20,7 @@ int main() {
     auto ptr = std::dynamic_pointer_cast<epsilon_schedulable>(agent->behavior_policy());
     assert(ptr != nullptr && "dynamic cast failure");
 
-    schedular<float> eps_exp_sche((ptr->epsilon()), 0.00f,
+    schedular<float> eps_exp_sche((ptr->epsilon()),
         [](float val, int _) {
             return val * 0.999954f;
         }

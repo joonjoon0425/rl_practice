@@ -14,16 +14,14 @@ int main() {
     float init = 0.0f;
 
     gridworld::env_grid2D env(w, h, {0, 0}, {3,5}, {3, 3});
-    // SARSA
-    //auto agent = create_agent(env, algo_type::TD, policy_type::ON_POLICY, 1.0, 0.9, 0.3, .0f);
     // QLEARN
     auto agent = create_agent(env, algo_type::TD, policy_type::OFF_POLICY, 1.0);
     auto ptr = std::dynamic_pointer_cast<epsilon_schedulable>(agent->behavior_policy());
     assert(ptr != nullptr && "dynamic cast failure");
 
-    schedular<float> eps_exp_sche((ptr->epsilon()), 0.01f,
+    schedular<float> eps_exp_sche((ptr->epsilon()),
         [](float val, int _) {
-            return val * 0.9996f;
+            return val * 0.999954f;
         }
     );
 
@@ -31,26 +29,16 @@ int main() {
 
     for (int i = 0; i < episodes; i++) {
         auto cur = env.reset(true);
-        // auto act = agent->sample_action(cur);
         bool terminate = false;
 
         int total_steps = 0;
         float total_reward = 0.f;
 
         while (!terminate) {
-//-----------------------------------------
-            //auto [next_s, reward, done] = env.step(cur, act);
-            //auto next_a = agent->sample_action(next_s);
-
-            //agent->observe({cur, act, reward, next_s, done, next_a});
-            
-            //act = next_a;
-            
-//-----------------------------------------
             auto a = agent->sample_action(cur);
             auto [next_s, reward, done] = env.step(cur, a);
             agent->observe({cur, a, reward, next_s, done});
-//-----------------------------------------
+
             cur = next_s;
             terminate = done;
             
