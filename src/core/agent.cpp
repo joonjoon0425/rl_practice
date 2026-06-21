@@ -17,7 +17,12 @@ agent::agent(int state_size, int action_size,
     alpha_(alpha)
 {}
 
-void agent::observe(const transition& data) {
+void agent::observe(transition data) {
+    // calculate rho_ when off policy method is used
+    if (behavior_policy_ != target_policy_) {
+        data.rho_ = behavior_policy_->get_prob(q_tables_, data.s_, data.a_, data.possible_actions);
+    }
+
     buffer_->push_back(data);
     if (buffer_->ready()) {
         //std::cout << "DEBUG: READY FOR UPDATE\n";
@@ -32,6 +37,19 @@ action_t agent::sample_action(const state_t& state, const action_mask_t& possibl
 
 action_t agent::predict_action(const state_t& state, const action_mask_t& possible_actions) {
     return target_policy_->get_action(q_tables_, state, possible_actions);
+}
+
+action_t agent::random_action(const state_t& state, const action_mask_t& possible_actions) {
+    action_mask_internal_t mask = possible_actions.to_ullong();
+    assert(mask > 0 && "no actions");
+    int size = possible_actions.count();
+
+    int rand = std::rand() % size;
+
+    for (int i = 0; i < rand; i++) mask &= (mask - 1);
+
+    assert(mask != 0 && "mask became zero unexpectedly");
+    return __builtin_ctzll(mask);
 }
 
 // debug?
@@ -69,6 +87,8 @@ float agent::max_q(const state_t& state, const action_mask_t& possible_actions) 
 }
 
 void agent::flush_buffer() {
-    buffer_->clear();
+    auto leftover = buffer_->flush();
+    if (leftover.empty() || leftover.back().timeout_) return;
+    else updater_->update(q_tables_, leftover, gamma_, alpha_);
 }
 

@@ -20,8 +20,6 @@ public:
     
     action_t greedy_action(const QTables& Q_table_, const state_t& state, const action_mask_t& possible_actions) const;
 
-    action_t random_action(const state_t& cur, const action_mask_t& possible_actions) const;
-
     float get_prob(const QTables& Q_table_, const state_t& state, const action_t& action, const action_mask_t& possible_actions) const override;
 };
 

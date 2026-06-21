@@ -11,6 +11,7 @@ struct transition {
     float reward_;
     state_t next_s_;
     bool done_;
+    bool timeout_;
     action_mask_t possible_actions;
 
     // for sarsa
@@ -33,8 +34,12 @@ public:
         data_.push_back(data);
     }
 
-    // implement this to throw all the leftover values
-    void clear() { data_.clear(); }
+    // implement this to throw out all the leftover values
+    std::vector<transition> flush() {
+        auto ret = std::vector<transition>(data_.begin(), data_.end());
+        data_.clear();
+        return ret;
+    }
 };
 
 #endif

@@ -2,6 +2,7 @@
 #include "core/schedular.hpp"
 #include <cassert>
 #include <gridworld.hpp>
+#include <limits>
 #include <memory>
 #include <register.hpp>
 #include <print>
@@ -13,9 +14,9 @@ int main() {
     int h = 15;
     float init = 0.0f;
 
-    gridworld::grid2D env(w, h, {0, 0}, {14,14}, {13, 13});
-    // QLEARN
-    auto agent = create_agent(env.state_size(), env.action_size(), algoType::QLearning, 1.0);
+    gridworld::grid2D env(w, h, {0, 0}, {14, 14}, {13, 13});
+    // SARSA
+    auto agent = create_agent(env.state_size(), env.action_size(), algoType::offPolicyMC, 1.0);
     auto ptr = std::dynamic_pointer_cast<epsilonSchedulable>(agent->behavior_policy());
     assert(ptr != nullptr && "dynamic cast failure");
 
@@ -27,34 +28,43 @@ int main() {
 
     int episodes = 1000000;
 
+    int max_stepped = std::numeric_limits<int>::min();
+
     for (int i = 0; i < episodes; i++) {
         auto cur = env.reset(true);
+        action_t act = agent->random_action(cur, env.get_possible_actions(cur));
         bool terminate = false;
+        bool timeout = false;
 
         int total_steps = 0;
         float total_reward = 0.f;
 
-        while (!terminate) {
-            auto a = agent->sample_action(cur, env.get_possible_actions(cur));
-            auto [next_s, reward, done, possible_actions] = env.step(cur, a);
-            agent->observe({cur, a, reward, next_s, done, false, possible_actions});
+        while (!terminate && !timeout) {
+            auto [next_s, reward, done, possible_actions] = env.step(cur, act);
+
+            agent->observe({cur, act, reward, next_s, done, timeout, possible_actions});
 
             cur = next_s;
+            act = agent->sample_action(next_s, possible_actions);
             terminate = done;
             
             total_steps++;
             total_reward += reward;
+            
+            if(total_steps > 5000) timeout = true;
         }
         eps_exp_sche.step(i);
 
         agent->flush_buffer();
         
+        max_stepped = max_stepped < total_steps ? total_steps : max_stepped;
 
         if ((i + 1) % 10000 == 0) {
             std::print("EPISODE {}: TOTAL STEPS = {}, TOTAL REWARD = {}\n", i + 1, total_steps, total_reward);
         }
     }
-    std::print("epsilon: {}\n",eps_exp_sche.value());
+    std::print("epsilon: {}\n", eps_exp_sche.value());
+    std::println("MAXIMUM STEPS: {}", max_stepped);
     print_policy_map(agent, env);
 }
 
