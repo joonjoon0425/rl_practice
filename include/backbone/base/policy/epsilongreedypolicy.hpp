@@ -2,87 +2,28 @@
 #define _EPSILON_GREEDY_POLICY_HPP_
 
 #include "core/policy.hpp"
+#include "core/qtable.hpp"
 #include <set>
-#include <algorithm>
-#include <cstdlib>
-#include <limits>
 
-template <typename Env>
-class epsilon_greedy_policy : public policy<Env>, public epsilon_schedulable {
+class epsilonGreedyPolicy : public policy, public epsilonSchedulable {
 protected:
     float epsilon_;
 
 public:
-    epsilon_greedy_policy(Env& env, float epsilon) : policy<Env>(env), epsilon_(epsilon) {}
+    epsilonGreedyPolicy(float epsilon);
 
-    float& epsilon() {return epsilon_;}
-    float epsilon() const {return epsilon_;}
-    void epsilon(float val) {epsilon_ = val;}
+    float& epsilon() override {return epsilon_;}
+    float epsilon() const override {return epsilon_;}
+    void epsilon(float val) override {epsilon_ = val;}
 
-    Env::action_t get_action(const std::vector<float>& Q_table_, const Env::state_t& state) const override {
-        typename Env::action_t ret_action;
-        float rand_val = static_cast<float>(std::rand()) / RAND_MAX;
+    action_t get_action(const QTables& Q_table_, const state_t& state, const std::vector<bool>& possible_actions) const override;
+    
 
-        if (rand_val < epsilon_) {
-            //explore
-            ret_action = random_action(state);
-        } else {
-            //exploit
-            ret_action = greedy_action(Q_table_, state);
-        }
+    action_t greedy_action(const QTables& Q_table_, const state_t& state, const std::vector<bool>& possible_actions) const;
 
-        return ret_action;
-    }
+    action_t random_action(const state_t& cur, const std::vector<bool>& possible_actions) const;
 
-    Env::action_t greedy_action(const std::vector<float>& Q_table_, const Env::state_t& state) const {
-        std::set<typename Env::action_t> actions = this->env_.get_possible_actions(state);
-        float max = -std::numeric_limits<float>::infinity();
-        std::vector<typename Env::action_t> max_actions;
-
-        for (typename Env::action_t act: actions) {
-            float q = Q_table_[this->env_.idx(state, act)];
-            if (q > max) {
-                max = q;
-                max_actions.clear();
-                max_actions.push_back(act);
-            } else if (max - q < 1e-7f) {
-                max_actions.push_back(act);
-            }
-        }
-
-        return max_actions[std::rand() % max_actions.size()];
-    }
-
-    Env::action_t random_action(const Env::state_t& cur) const {
-        std::set<typename Env::action_t> actions = this->env_.get_possible_actions(cur);
-        int rand_idx = std::rand() % actions.size();
-        return *std::next(actions.begin(), rand_idx);
-    }
-
-    float get_prob(const std::vector<float>& Q_table_, const Env::state_t& state, const Env::action_t& action) const override {
-        std::set<typename Env::action_t> actions = this->env_.get_possible_actions(state);
-        float max = -std::numeric_limits<float>::infinity();
-        std::vector<typename Env::action_t> max_actions;
-
-        for (typename Env::action_t act: actions) {
-            float q = Q_table_[this->env_.idx(state, act)];
-            if (q > max) {
-                max = q;
-                max_actions.clear();
-                max_actions.push_back(act);
-            } else if (max - q < 1e-7f) {
-                max_actions.push_back(act);
-            }
-        }
-
-        bool is_greedy = std::find(max_actions.begin(), max_actions.end(), action) != max_actions.end();
-
-        float prob = epsilon_ / actions.size();
-        if (is_greedy) {
-            prob += (1.f - epsilon_) / max_actions.size();
-        }
-        return prob;
-    };
+    float get_prob(const QTables& Q_table_, const state_t& state, const action_t& action, const std::vector<bool>& possible_actions) const override;
 };
 
 #endif

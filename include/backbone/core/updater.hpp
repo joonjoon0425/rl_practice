@@ -3,16 +3,16 @@
 
 #include <vector>
 #include "buffer.hpp"
+#include "qtable.hpp"
 
-template <typename Env>
+using state_t = int;
+using action_t = int;
+
 class updater {
-protected:
-    Env& env_;
 public:
     virtual ~updater() = default;
 
-    updater(Env& env) : env_(env) {}
-    virtual void update(std::vector<float>& Q_table, const std::vector<transition<Env>>& data, float gamma, float alpha) = 0;
+    virtual void update(QTables& Q_table, const std::vector<transition>& data, float gamma, float alpha) = 0;
 };
 
 

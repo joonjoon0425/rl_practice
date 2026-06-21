@@ -15,35 +15,34 @@
 
 #include <memory>
 
-enum class algo_type {TD, EXPECTED_TD, MC};
-enum class policy_type {ON_POLICY, OFF_POLICY};
+enum class algoType {TD, EXPECTED_TD, MC};
+enum class policyType {ON_POLICY, OFF_POLICY};
 
-template <typename Env>
-std::shared_ptr<agent<Env>> create_agent(Env& env, algo_type a, policy_type p, float epsilon, float gamma = 0.9f, float alpha = 0.5f, float init = 0.0f) {
-    std::shared_ptr<policy<Env>> t_p = nullptr;
-    std::shared_ptr<policy<Env>> b_p = nullptr;
-    std::unique_ptr<buffer<Env>> buffer = nullptr;
-    std::unique_ptr<updater<Env>> updater = nullptr;
+std::shared_ptr<agent> create_agent(int state_size, int action_size, algoType a, policyType p, float epsilon, float gamma = 0.9f, float alpha = 0.5f, float init = 0.0f) {
+    std::shared_ptr<policy> t_p = nullptr;
+    std::shared_ptr<policy> b_p = nullptr;
+    std::unique_ptr<buffer> buffer = nullptr;
+    std::unique_ptr<updater> updater = nullptr;
     
-    if (a == algo_type::TD) {
-        if (p == policy_type::ON_POLICY) {
-            t_p = std::make_shared<epsilon_greedy_policy<Env>>(env, epsilon);
+    if (a == algoType::TD) {
+        if (p == policyType::ON_POLICY) {
+            t_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
             b_p = t_p;
-            buffer = std::make_unique<nstep_buffer<Env>>(1);
-            updater = std::make_unique<sarsa_updater<Env>>(env);
-        } else if (p == policy_type::OFF_POLICY) {
-            t_p = std::make_shared<greedy_policy<Env>>(env);
-            b_p = std::make_shared<epsilon_greedy_policy<Env>>(env, epsilon);
-            buffer = std::make_unique<nstep_buffer<Env>>(1);
-            updater = std::make_unique<qlearning_updater<Env>>(env);
+            buffer = std::make_unique<nStepBuffer>(1);
+            updater = std::make_unique<sarsaUpdater>();
+        } else if (p == policyType::OFF_POLICY) {
+            t_p = std::make_shared<greedyPolicy>();
+            b_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
+            buffer = std::make_unique<nStepBuffer>(1);
+            updater = std::make_unique<QLearningUpdater>();
         }
-    } else if (a == algo_type::EXPECTED_TD) {
+    } else if (a == algoType::EXPECTED_TD) {
 
-    } else if (a == algo_type::MC) {
+    } else if (a == algoType::MC) {
 
     }
 
-    return std::make_shared<agent<Env>>(env, t_p, b_p, std::move(buffer), std::move(updater), gamma, alpha, init);
+    return std::make_shared<agent>(state_size, action_size, t_p, b_p, std::move(buffer), std::move(updater), gamma, alpha, init);
 }
 
 #endif

@@ -6,6 +6,12 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 project(rl_practice)
 add_library(gridworld
     src/gridworld/gridworld.cpp
+    src/base/buffer/nstepbuffer.cpp
+    src/base/policy/epsilongreedypolicy.cpp
+    src/base/policy/greedypolicy.cpp
+    src/base/updater/qlearningupdater.cpp
+    src/base/updater/sarsaupdater.cpp
+    src/core/agent.cpp
 )
 
 add_executable(q_main q_main.cpp)

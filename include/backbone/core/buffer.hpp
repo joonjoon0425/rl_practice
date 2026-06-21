@@ -3,45 +3,41 @@
 
 #include <deque>
 #include <vector>
+#include <set>
 
-template <typename Env>
+using state_t = int;
+using action_t = int;
+
 struct transition {
-    Env::state_t s_;
-    Env::action_t a_;
+    state_t s_;
+    action_t a_;
     float reward_;
-    Env::state_t next_s_;
-
+    state_t next_s_;
     bool done_;
+    std::vector<bool> possible_actions;
 
     // for sarsa
-    Env::action_t next_a_;
+    action_t next_a_;
     // for off-policy method
     float rho_ = 1.0f;
 };
 
-template <typename Env>
 class buffer {
 protected:
-    std::deque<transition<Env>> data_;
+    std::deque<transition> data_;
 
 public:
     virtual ~buffer() = default;
-    // virtual std::vector<transition<Env>> pop_front() = 0;
 
-    virtual std::vector<transition<Env>> pop() = 0;
+    virtual std::vector<transition> pop() = 0;
     virtual bool ready() const = 0;
-    // void push_front(const transition<Env>& data) {
-    //     data_.push_front(data);
-    // }
 
-    void push_back(const transition<Env>& data) {
+    void push_back(const transition& data) {
         data_.push_back(data);
     }
 
+    // implement this to throw all the leftover values
     void clear() { data_.clear(); }
-
-
-    
 };
 
 #endif

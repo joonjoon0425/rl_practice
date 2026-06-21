@@ -2,7 +2,7 @@
 #include <cstdlib>
 
 namespace gridworld {
-    env_grid2D::env_grid2D(int width, int height, state_t start, state_t goal, state_t trap)
+    grid2D::grid2D(int width, int height, envState_t start, envState_t goal, envState_t trap)
     : width_(width),
       height_(height),
       start_(start),
@@ -11,42 +11,35 @@ namespace gridworld {
       environment(width * height, 4)
     {}
 
-    env_grid2D::state_t env_grid2D::reset(bool random) {
-        state_t cur_{0,0};
-        if (random) {
-            do {
-                int rand = std::rand();
-                int x = rand % width_;
-                int y = rand % height_;
-                cur_ = {x, y};
-            } while (cur_ == trap_ || cur_ == goal_);
-        } else {
-            return start_;
-        }
+    state_t grid2D::reset(bool random) {
+        if (random) return std::rand() % state_size_;
 
-        return cur_;
+        return state_to_index(start_);
     }
     
-    std::tuple<env_grid2D::state_t, float, bool> env_grid2D::step(const state_t& state, const action_t& action) {
+    std::tuple<state_t, float, bool, std::vector<bool>> grid2D::step(const state_t& state, const action_t& action) {
         // assumes that only possible actions are received as input
-        state_t cur_ = state;
-        switch(action) {
-            case action_t::UP: cur_.y_++; break;
-            case action_t::DOWN: cur_.y_--; break;
-            case action_t::LEFT: cur_.x_--; break;
-            case action_t::RIGHT: cur_.x_++; break;
+        envState_t state_ = index_to_state(state);
+        envAction_t act_ = index_to_action(action);
+        switch(act_) {
+            case envAction_t::UP: state_.y_++; break;
+            case envAction_t::DOWN: state_.y_--; break;
+            case envAction_t::LEFT: state_.x_--; break;
+            case envAction_t::RIGHT: state_.x_++; break;
         };
 
         float reward = -0.2f;
         bool done = false;
-        if (cur_ == goal_) {
+        if (state_ == goal_) {
             reward = 15.0f;
             done = true;
-        } else if (cur_ == trap_) {
+        } else if (state_ == trap_) {
             reward = -10.0f;
             done = true;
         }
 
-        return {cur_, reward, done};
+        int idx = state_to_index(state_);
+
+        return {idx, reward, done, get_possible_actions(idx)};
     }
 }
