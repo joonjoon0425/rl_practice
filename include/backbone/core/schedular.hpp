@@ -1,7 +1,6 @@
 #ifndef _SCHEDULAR_HPP_
 #define _SCHEDULAR_HPP_
 
-#include <algorithm>
 #include <functional>
 
 template <typename T>

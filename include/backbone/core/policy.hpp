@@ -2,18 +2,23 @@
 #define _POLICY_HPP_
 
 #include <vector>
+#include <set>
 #include "schedulable.hpp"
+#include "qtable.hpp"
+#include "common.hpp"
 
-template <typename Env>
+using state_t = int;
+using action_t = int;
+
 class policy {
 protected:
-    Env& env_;
+    mutable std::vector<action_t> buffer;
+
 public:
-    policy(Env& env) : env_(env) {}
     virtual ~policy() = default;
 
-    virtual Env::action_t get_action(const std::vector<float>& Q_table_, const Env::state_t& state) const = 0;
-    virtual float get_prob(const std::vector<float>& Q_table_, const Env::state_t& state, const Env::action_t& action) const = 0;
+    virtual action_t get_action(const QTables& Q_table_, const state_t& state, const action_mask_t& possible_actions) const = 0;
+    virtual float get_prob(const QTables& Q_table_, const state_t& state, const action_t& action, const action_mask_t& possible_actions) const = 0;
 };
 
 

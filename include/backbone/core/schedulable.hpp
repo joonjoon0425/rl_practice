@@ -3,7 +3,7 @@
 
 // interfaces
 
-class epsilon_schedulable {
+class epsilonSchedulable {
 public:
     virtual float& epsilon() = 0;
     virtual float epsilon() const = 0;
