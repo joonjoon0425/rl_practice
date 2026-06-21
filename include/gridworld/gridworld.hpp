@@ -21,7 +21,7 @@ namespace gridworld {
         grid2D(int width, int height, envState_t start, envState_t goal, envState_t trap);
 
         state_t reset(bool random) override;
-        std::tuple<state_t, float, bool, std::vector<bool>> step(const state_t&, const action_t&) override;
+        std::tuple<state_t, float, bool, action_mask_t> step(const state_t&, const action_t&) override;
 
     private:
         int width_;
@@ -58,14 +58,19 @@ namespace gridworld {
             return static_cast<envAction_t>(index);
         }
 
-        std::vector<bool> impl_get_possible_actions(const state_t& state_) const {
-            std::vector<bool> possible_actions(action_size_, true);
+        action_mask_t impl_get_possible_actions(const state_t& state_) const {
+            action_mask_t possible_actions;
+            possible_actions |= 0b1111;
             envState_t state = index_to_state(state_);
-            if (state.x_ == width_ - 1) possible_actions[action_to_index(envAction_t::RIGHT)] = false;
-            else if (state.x_ == 0) possible_actions[action_to_index(envAction_t::LEFT)] = false;
+            if (state.x_ == width_ - 1) // RIGHT ACTION(3) BAN
+                possible_actions &= ~(1 << 3);
+            else if (state.x_ == 0) // LEFT ACTION(2) BAN
+                possible_actions &= ~(1 << 2);
             
-            if (state.y_ == height_ - 1) possible_actions[action_to_index(envAction_t::UP)] = false;
-            else if (state.y_ == 0) possible_actions[action_to_index(envAction_t::DOWN)] = false;
+            if (state.y_ == height_ - 1) // UP ACTION(0) BAN
+                possible_actions &= ~(1 << 0);
+            else if (state.y_ == 0) // DOWN ACTION(1) BAN
+                possible_actions &= ~(1 << 1);
 
             return possible_actions;
         }

@@ -12,6 +12,7 @@ add_library(gridworld
     src/base/updater/qlearningupdater.cpp
     src/base/updater/sarsaupdater.cpp
     src/core/agent.cpp
+    src/core/qtable.cpp
 )
 
 add_executable(q_main q_main.cpp)

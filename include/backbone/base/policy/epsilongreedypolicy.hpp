@@ -3,7 +3,7 @@
 
 #include "core/policy.hpp"
 #include "core/qtable.hpp"
-#include <set>
+#include "core/common.hpp"
 
 class epsilonGreedyPolicy : public policy, public epsilonSchedulable {
 protected:
@@ -16,14 +16,13 @@ public:
     float epsilon() const override {return epsilon_;}
     void epsilon(float val) override {epsilon_ = val;}
 
-    action_t get_action(const QTables& Q_table_, const state_t& state, const std::vector<bool>& possible_actions) const override;
+    action_t get_action(const QTables& Q_table_, const state_t& state, const action_mask_t& possible_actions) const override;
     
+    action_t greedy_action(const QTables& Q_table_, const state_t& state, const action_mask_t& possible_actions) const;
 
-    action_t greedy_action(const QTables& Q_table_, const state_t& state, const std::vector<bool>& possible_actions) const;
+    action_t random_action(const state_t& cur, const action_mask_t& possible_actions) const;
 
-    action_t random_action(const state_t& cur, const std::vector<bool>& possible_actions) const;
-
-    float get_prob(const QTables& Q_table_, const state_t& state, const action_t& action, const std::vector<bool>& possible_actions) const override;
+    float get_prob(const QTables& Q_table_, const state_t& state, const action_t& action, const action_mask_t& possible_actions) const override;
 };
 
 #endif

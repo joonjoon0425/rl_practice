@@ -5,6 +5,7 @@
 #include <set>
 #include "schedulable.hpp"
 #include "qtable.hpp"
+#include "common.hpp"
 
 using state_t = int;
 using action_t = int;
@@ -16,8 +17,8 @@ protected:
 public:
     virtual ~policy() = default;
 
-    virtual action_t get_action(const QTables& Q_table_, const state_t& state, const std::vector<bool>& possible_actions) const = 0;
-    virtual float get_prob(const QTables& Q_table_, const state_t& state, const action_t& action, const std::vector<bool>& possible_actions) const = 0;
+    virtual action_t get_action(const QTables& Q_table_, const state_t& state, const action_mask_t& possible_actions) const = 0;
+    virtual float get_prob(const QTables& Q_table_, const state_t& state, const action_t& action, const action_mask_t& possible_actions) const = 0;
 };
 
 

@@ -5,8 +5,8 @@
 #include <concepts>
 #include <vector>
 
-using state_t = int;
-using action_t = int;
+#include "common.hpp"
+
 
 template <typename Env>
 concept Environment = requires (Env env, typename Env::state_t s, typename Env::action_t a) {
@@ -35,11 +35,11 @@ public:
     
     virtual state_t reset(bool random) = 0;
 
-    virtual std::tuple<state_t, float, bool, std::vector<bool>> step(const state_t&, const action_t&) = 0;
+    virtual std::tuple<state_t, float, bool, action_mask_t> step(const state_t&, const action_t&) = 0;
 
     environment(int s, int a) : state_size_(s), action_size_(a) {}
 
-    std::vector<bool> get_possible_actions(const state_t& state) const {
+    action_mask_t get_possible_actions(const state_t& state) const {
         return static_cast<const Derived*>(this)->impl_get_possible_actions(state);
     }
 

@@ -5,13 +5,11 @@
 #include "policy.hpp"
 #include "updater.hpp"
 #include "qtable.hpp"
+#include "common.hpp"
 
 #include <cassert>
 #include <memory>
 #include <limits>
-
-using state_t = int;
-using action_t = int;
 
 class agent {
 protected:
@@ -36,13 +34,13 @@ public:
 
     void observe(const transition& data);
 
-    action_t sample_action(const state_t& state, const std::vector<bool>& possible_actions);
-    action_t predict_action(const state_t& state, const std::vector<bool>& possible_actions);
+    action_t sample_action(const state_t& state, const action_mask_t& possible_actions);
+    action_t predict_action(const state_t& state, const action_mask_t& possible_actions);
 
     // debug?
-    action_t greedy_action(const state_t& state, const std::vector<bool>& possible_actions);
+    action_t greedy_action(const state_t& state, const action_mask_t& possible_actions);
     // debug
-    float max_q(const state_t& state, const std::vector<bool>& possible_actions);
+    float max_q(const state_t& state, const action_mask_t& possible_actions);
 
     
     void flush_buffer();

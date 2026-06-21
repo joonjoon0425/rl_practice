@@ -3,10 +3,7 @@
 
 #include <deque>
 #include <vector>
-#include <set>
-
-using state_t = int;
-using action_t = int;
+#include "common.hpp"
 
 struct transition {
     state_t s_;
@@ -14,7 +11,7 @@ struct transition {
     float reward_;
     state_t next_s_;
     bool done_;
-    std::vector<bool> possible_actions;
+    action_mask_t possible_actions;
 
     // for sarsa
     action_t next_a_;

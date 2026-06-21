@@ -3,7 +3,6 @@
 
 #include <core/env.hpp>
 #include <core/buffer.hpp>
-#include <iostream>
 
 class nStepBuffer : public buffer {
 protected:
