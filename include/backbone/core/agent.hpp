@@ -32,10 +32,11 @@ public:
         float gamma, float alpha,
         float init = 0.0f, int table_num = 1);
 
-    void observe(const transition& data);
+    void observe(transition data);
 
     action_t sample_action(const state_t& state, const action_mask_t& possible_actions);
     action_t predict_action(const state_t& state, const action_mask_t& possible_actions);
+    action_t random_action(const state_t& state, const action_mask_t& possible_actions);
 
     // debug?
     action_t greedy_action(const state_t& state, const action_mask_t& possible_actions);

@@ -7,16 +7,20 @@ project(rl_practice)
 add_library(gridworld
     src/gridworld/gridworld.cpp
     src/base/buffer/nstepbuffer.cpp
+    src/base/buffer/montecarlobuffer.cpp
     src/base/policy/epsilongreedypolicy.cpp
     src/base/policy/greedypolicy.cpp
     src/base/updater/qlearningupdater.cpp
     src/base/updater/sarsaupdater.cpp
+    src/base/updater/montecarloupdater.cpp
     src/core/agent.cpp
     src/core/qtable.cpp
+    src/core/policy.cpp
 )
 
 add_executable(q_main q_main.cpp)
 add_executable(s_main s_main.cpp)
+add_executable(mc_main mc_main.cpp)
 
 target_include_directories(gridworld PUBLIC
     include/backbone
@@ -25,3 +29,4 @@ target_include_directories(gridworld PUBLIC
 
 target_link_libraries(q_main gridworld)
 target_link_libraries(s_main gridworld)
+target_link_libraries(mc_main gridworld)

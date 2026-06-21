@@ -24,6 +24,10 @@ public:
     action_mask_t greedy_actions(const state_t& state, const action_mask_t& possible_actions) const;
 
     float max(const state_t& state, const action_mask_t& possible_actions) const;
+
+    int index(const state_t& state, const action_t& action) {
+        return state * action_size_ + action;
+    }
 };
 
 #endif
