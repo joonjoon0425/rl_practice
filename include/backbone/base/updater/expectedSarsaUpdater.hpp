@@ -12,7 +12,7 @@ private:
 public:
     expectedSarsaUpdater(std::shared_ptr<policy> target_policy) : target_policy_(target_policy) {}
     
-    void update(QTables& Q_table, const std::vector<transition>& data, float gamma, float alpha) override;
+    void update(QValueSource& Q_table, const std::vector<transition>& data, float gamma, float alpha) override;
 };
 
 #endif

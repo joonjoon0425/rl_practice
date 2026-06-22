@@ -2,9 +2,10 @@
 #define _AGENT_HPP_
 
 #include "buffer.hpp"
+#include "core/QValueSource.hpp"
 #include "policy.hpp"
 #include "updater.hpp"
-#include "qtable.hpp"
+#include "QValueSource.hpp"
 #include "common.hpp"
 
 #include <cassert>
@@ -13,7 +14,7 @@
 
 class agent {
 protected:
-    QTables q_tables_;
+    QValueSource q_tables_;
 
     std::shared_ptr<policy> target_policy_;
     std::shared_ptr<policy> behavior_policy_;
@@ -29,8 +30,9 @@ public:
         std::shared_ptr<policy> b_p,
         std::unique_ptr<buffer> buffer,
         std::unique_ptr<updater> updater,
+        std::unique_ptr<QValueEstimator> estimator,
         float gamma, float alpha,
-        float init = 0.0f, int table_num = 1);
+        float init, int table_num);
 
     void observe(transition data);
 

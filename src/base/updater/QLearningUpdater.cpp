@@ -3,7 +3,7 @@
 
 QLearningUpdater::QLearningUpdater(){}
 
-void QLearningUpdater::update(QTables& Q_table, const std::vector<transition>& data, float gamma, float alpha) {
+void QLearningUpdater::update(QValueSource& Q_table, const std::vector<transition>& data, float gamma, float alpha) {
     // requires two transition data
     assert(data.size() == 1 && "qlearning requires one update data");
     

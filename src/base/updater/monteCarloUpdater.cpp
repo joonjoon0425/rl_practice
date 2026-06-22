@@ -2,7 +2,7 @@
 #include <unordered_set>
 
 void onPolicyMonteCarloUpdater::update(
-    QTables &Q_table,
+    QValueSource &Q_table,
     const std::vector<transition> &data,
     float gamma, float alpha
 ) {
@@ -25,7 +25,7 @@ void onPolicyMonteCarloUpdater::update(
 }
 
 void offPolicyMonteCarloUpdater::update(
-    QTables &Q_table,
+    QValueSource &Q_table,
     const std::vector<transition> &data,
     float gamma, float alpha
 ) {

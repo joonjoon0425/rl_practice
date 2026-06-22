@@ -1,6 +1,6 @@
 #include <base/updater/expectedSarsaUpdater.hpp>
 
-void expectedSarsaUpdater::update(QTables& Q_table, const std::vector<transition>& data, float gamma, float alpha) {
+void expectedSarsaUpdater::update(QValueSource& Q_table, const std::vector<transition>& data, float gamma, float alpha) {
     // requires one transition data
     assert(data.size() == 1 && "sarsa requires one update data");
     

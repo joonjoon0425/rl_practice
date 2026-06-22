@@ -7,7 +7,7 @@ class sarsaUpdater : public updater {
 public:
     sarsaUpdater();
 
-    void update(QTables& Q_table, const std::vector<transition>& data, float gamma, float alpha) override;
+    void update(QValueSource& Q_table, const std::vector<transition>& data, float gamma, float alpha) override;
 };
 
 #endif
