@@ -35,7 +35,7 @@ public:
     
     virtual state_t reset(bool random) = 0;
 
-    virtual std::tuple<state_t, float, bool, action_mask_t> step(const state_t&, const action_t&) = 0;
+    virtual std::tuple<state_t, float, bool> step(const state_t&, const action_t&) = 0;
 
     environment(int s, int a) : state_size_(s), action_size_(a) {}
 

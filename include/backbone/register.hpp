@@ -18,13 +18,14 @@
 #include <base/QValueEstimator/arithmeticMeanEstimator.hpp>
 
 #include "core/QValueSource.hpp"
+#include "core/common.hpp"
 #include "core/schedular.hpp"
 
 #include <memory>
 
 enum class algoType {sarsa, QLearning, firstVisitOnPolicyMC, everyVisitOnPolicyMC, offPolicyMC, expectedSarsa, doubleQLearning};
 
-std::shared_ptr<agent> create_agent(int state_size, int action_size, algoType a, float epsilon, float gamma = 0.9f, float alpha = 0.5f, float init = 0.0f) {
+std::shared_ptr<agent> create_agent(int state_size, int action_size, std::function<action_mask_t(const state_t&)> get_action_mask, algoType a, float epsilon, float gamma = 0.9f, float alpha = 0.5f, float init = 0.0f) {
     std::shared_ptr<policy> t_p = nullptr;
     std::shared_ptr<policy> b_p = nullptr;
     std::unique_ptr<buffer> buffer = nullptr;
@@ -80,7 +81,7 @@ std::shared_ptr<agent> create_agent(int state_size, int action_size, algoType a,
     }
 
 
-    return std::make_shared<agent>(state_size, action_size, t_p, b_p, std::move(buffer), std::move(updater), std::move(estimator), gamma, alpha, init, table_num);
+    return std::make_shared<agent>(state_size, action_size, get_action_mask, t_p, b_p, std::move(buffer), std::move(updater), std::move(estimator), gamma, alpha, init, table_num);
 }
 
 #endif

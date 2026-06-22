@@ -16,7 +16,7 @@ int main() {
 
     gridworld::grid2D env(w, h, {0, 0}, {14, 14}, {13, 13});
     // SARSA
-    auto agent = create_agent(env.state_size(), env.action_size(), algoType::offPolicyMC, 1.0);
+    auto agent = create_agent(env.state_size(), env.action_size(), [&](const state_t& s){return env.get_possible_actions(s);}, algoType::offPolicyMC, 1.0);
     auto ptr = std::dynamic_pointer_cast<epsilonSchedulable>(agent->behavior_policy());
     assert(ptr != nullptr && "dynamic cast failure");
 
@@ -33,8 +33,7 @@ int main() {
 
     for (int i = 0; i < episodes; i++) {
         auto cur = env.reset(true);
-        action_mask_t cur_possible_actions = env.get_possible_actions(cur);
-        action_t act = agent->random_action(cur, cur_possible_actions);
+        action_t act = agent->random_action(cur);
         bool terminate = false;
         bool timeout = false;
 
@@ -42,11 +41,18 @@ int main() {
         float total_reward = 0.f;
 
         while (!terminate && !timeout) {
-            auto [next_s, reward, done, next_s_possible_actions] = env.step(cur, act);
-            agent->observe({cur, act, reward, next_s, done, timeout, cur_possible_actions, next_s_possible_actions});
-            cur_possible_actions = next_s_possible_actions;
+            auto [next_s, reward, done] = env.step(cur, act);
+            agent->observe({
+                .s_ = cur,
+                .a_ = act,
+                .r_ = reward,
+                .next_s_ = next_s,
+                .done_ = done,
+                .timeout_ = timeout
+            });
+            
             cur = next_s;
-            act = agent->sample_action(next_s, next_s_possible_actions);
+            act = agent->sample_action(next_s);
             terminate = done;
             
             total_steps++;
@@ -84,8 +90,8 @@ void print_policy_map(std::shared_ptr<agent> agent, const gridworld::grid2D& env
                 std::print("G\t");
             } else {
                 std::print("{}\t",
-                    symbol[static_cast<int>(agent->greedy_action(env.state_to_index(p), env.get_possible_actions(env.state_to_index(p))))],
-                    agent->max_q(env.state_to_index(p), env.get_possible_actions(env.state_to_index(p))));
+                    symbol[static_cast<int>(agent->greedy_action(env.state_to_index(p)))],
+                    agent->max_q(env.state_to_index(p)));
             }
         }
         std::print("\n");

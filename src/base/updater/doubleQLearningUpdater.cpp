@@ -4,7 +4,7 @@ void doubleQLearningUpdater::update(QValueSource &Q_table, const std::vector<tra
     assert(Q_table.table_size() == 2 && "Q table size is not 2");
     state_t s = data[0].s_;
     action_t a = data[0].a_;
-    float reward = data[0].reward_;
+    float reward = data[0].r_;
     state_t next_s = data[0].next_s_;
     bool done = data[0].done_;
     

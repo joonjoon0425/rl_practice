@@ -21,7 +21,7 @@ namespace gridworld {
         grid2D(int width, int height, envState_t start, envState_t goal, envState_t trap);
 
         state_t reset(bool random) override;
-        std::tuple<state_t, float, bool, action_mask_t> step(const state_t&, const action_t&) override;
+        std::tuple<state_t, float, bool> step(const state_t&, const action_t&) override;
 
     private:
         int width_;

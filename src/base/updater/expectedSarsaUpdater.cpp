@@ -6,7 +6,7 @@ void expectedSarsaUpdater::update(QValueSource& Q_table, const std::vector<trans
     
     state_t s = data[0].s_;
     action_t a = data[0].a_;
-    float reward = data[0].reward_;
+    float reward = data[0].r_;
     state_t s_next = data[0].next_s_;
     bool done = data[0].done_;
     
