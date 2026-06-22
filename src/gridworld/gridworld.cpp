@@ -17,7 +17,7 @@ namespace gridworld {
         return state_to_index(start_);
     }
     
-    std::tuple<state_t, float, bool, action_mask_t> grid2D::step(const state_t& state, const action_t& action) {
+    std::tuple<state_t, float, bool> grid2D::step(const state_t& state, const action_t& action) {
         // assumes that only possible actions are received as input
         envState_t state_ = index_to_state(state);
         envAction_t act_ = index_to_action(action);
@@ -40,6 +40,6 @@ namespace gridworld {
 
         int idx = state_to_index(state_);
 
-        return {idx, reward, done, get_possible_actions(idx)};
+        return {idx, reward, done};
     }
 }

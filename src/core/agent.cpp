@@ -4,6 +4,7 @@
 #include <memory>
 
 agent::agent(int state_size, int action_size,
+    std::function<action_mask_t(const state_t&)> get_action_mask,
     std::shared_ptr<policy> t_p,
     std::shared_ptr<policy> b_p,
     std::unique_ptr<buffer> buffer,
@@ -12,6 +13,7 @@ agent::agent(int state_size, int action_size,
     float gamma, float alpha, float init,
     int table_num)
 :
+    get_action_mask_(get_action_mask),
     target_policy_(t_p),
     behavior_policy_(b_p),
     buffer_(std::move(buffer)),
@@ -22,6 +24,10 @@ agent::agent(int state_size, int action_size,
 {}
 
 void agent::observe(transition data) {
+    // fill in s_possible_actions and next_s_possible_actions
+    data.s_possible_actions = get_action_mask_(data.s_);
+    data.next_s_possible_actions = get_action_mask_(data.next_s_);
+
     // calculate rho_ when off policy method is used
     if (behavior_policy_ != target_policy_) {
         data.log_rho_ = std::log(target_policy_->get_prob(q_tables_, data.s_, data.a_, data.s_possible_actions))
@@ -37,16 +43,19 @@ void agent::observe(transition data) {
     }
 }
 
-action_t agent::sample_action(const state_t& state, const action_mask_t& possible_actions) {
+action_t agent::sample_action(const state_t& state) {
+    auto possible_actions = get_action_mask_(state);
     if (behavior_policy_) return behavior_policy_->get_action(q_tables_, state, possible_actions);
     return target_policy_->get_action(q_tables_, state, possible_actions);
 }
 
-action_t agent::predict_action(const state_t& state, const action_mask_t& possible_actions) {
+action_t agent::predict_action(const state_t& state) {
+    auto possible_actions = get_action_mask_(state);
     return target_policy_->get_action(q_tables_, state, possible_actions);
 }
 
-action_t agent::random_action(const state_t& state, const action_mask_t& possible_actions) {
+action_t agent::random_action(const state_t& state) {
+    auto possible_actions = get_action_mask_(state);
     action_mask_internal_t mask = possible_actions.to_ullong();
     assert(mask > 0 && "no actions");
     int size = possible_actions.count();
@@ -60,37 +69,14 @@ action_t agent::random_action(const state_t& state, const action_mask_t& possibl
 }
 
 // debug?
-action_t agent::greedy_action(const state_t& state, const action_mask_t& possible_actions) {
-    float max = -std::numeric_limits<float>::infinity();
-    std::vector<action_t> buffer;
-
-    for (int i = 0; i < possible_actions.size(); i++) {
-        if (possible_actions[i]) {
-            float q = q_tables_(state, i);
-            if (q > max) {
-                max = q;
-                buffer.clear();
-                buffer.push_back(i);
-            } else if (max - q < 1e-7f) {
-                buffer.push_back(i);
-            }
-        }
-    }
-
-    return buffer[std::rand() % buffer.size()];
+action_t agent::greedy_action(const state_t& state) {
+    auto possible_actions = get_action_mask_(state);
+    return q_tables_.greedy_action(state, possible_actions);
 }
 // debug
-float agent::max_q(const state_t& state, const action_mask_t& possible_actions) {
-    float max = -std::numeric_limits<float>::infinity();
-
-    for (int i = 0; i < possible_actions.size(); i++) {
-        if (possible_actions[i]) {
-            float q = q_tables_(state, i);
-            max = max < q ? q : max; 
-        }
-    }
-
-    return max;
+float agent::max_q(const state_t& state) {
+    auto possible_actions = get_action_mask_(state);
+    return q_tables_.max(state, possible_actions);
 }
 
 void agent::flush_buffer() {

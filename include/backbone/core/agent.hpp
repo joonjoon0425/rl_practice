@@ -9,6 +9,7 @@
 #include "common.hpp"
 
 #include <cassert>
+#include <functional>
 #include <memory>
 #include <limits>
 
@@ -24,8 +25,11 @@ protected:
     float gamma_;
     float alpha_;
 
+    std::function<action_mask_t(const state_t&)> get_action_mask_;
+
 public:
     agent(int state_size, int action_size,
+        std::function<action_mask_t(const state_t&)> get_action_mask,
         std::shared_ptr<policy> t_p,
         std::shared_ptr<policy> b_p,
         std::unique_ptr<buffer> buffer,
@@ -36,14 +40,14 @@ public:
 
     void observe(transition data);
 
-    action_t sample_action(const state_t& state, const action_mask_t& possible_actions);
-    action_t predict_action(const state_t& state, const action_mask_t& possible_actions);
-    action_t random_action(const state_t& state, const action_mask_t& possible_actions);
+    action_t sample_action(const state_t& state);
+    action_t predict_action(const state_t& state);
+    action_t random_action(const state_t& state);
 
     // debug?
-    action_t greedy_action(const state_t& state, const action_mask_t& possible_actions);
+    action_t greedy_action(const state_t& state);
     // debug
-    float max_q(const state_t& state, const action_mask_t& possible_actions);
+    float max_q(const state_t& state);
 
     
     void flush_buffer();

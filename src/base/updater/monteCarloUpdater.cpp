@@ -13,7 +13,7 @@ void onPolicyMonteCarloUpdater::update(
     std::unordered_set<int> seen;
 
     for (int i = len - 1; i >= 0; i--) {
-        G[i] = gamma * G[i + 1] + data[i].reward_;
+        G[i] = gamma * G[i + 1] + data[i].r_;
     }
 
     for (int i = 0; i < len; i++) {
@@ -40,7 +40,7 @@ void offPolicyMonteCarloUpdater::update(
         assert(!std::isnan(log_W) && "log_W became NaN");
 
         int saIdx = Q_table.index(data[i].s_, data[i].a_);
-        G = gamma * G + data[i].reward_;
+        G = gamma * G + data[i].r_;
         float W = std::exp(log_W);
         C_[saIdx] += W;
         Q_table(data[i].s_, data[i].a_) += W / C_[saIdx] * (G - Q_table(data[i].s_, data[i].a_));
