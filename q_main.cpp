@@ -30,18 +30,19 @@ int main() {
 
     for (int i = 0; i < episodes; i++) {
         auto cur = env.reset(true);
-        bool terminate = false;
+        auto cur_possible_actions = env.get_possible_actions(cur);
 
+        bool terminate = false;
         int total_steps = 0;
         float total_reward = 0.f;
 
         while (!terminate) {
-            auto cur_possible_actions = env.get_possible_actions(cur);
             auto a = agent->sample_action(cur, cur_possible_actions);
             auto [next_s, reward, done, next_s_possible_actions] = env.step(cur, a);
             agent->observe({cur, a, reward, next_s, done, false, cur_possible_actions, next_s_possible_actions});
 
             cur = next_s;
+            cur_possible_actions = next_s_possible_actions;
             terminate = done;
             
             total_steps++;
@@ -58,6 +59,13 @@ int main() {
     }
     std::print("epsilon: {}\n",eps_exp_sche.value());
     print_policy_map(agent, env);
+
+    //debug
+    for(int j = 0; j < env.state_size(); j++) {
+        for (int i = 0; i < env.action_size(); i++) {
+            
+        }
+    }
 }
 
 void print_policy_map(std::shared_ptr<agent> agent, const gridworld::grid2D& env) {
