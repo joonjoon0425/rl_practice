@@ -12,7 +12,7 @@ void doubleQLearningUpdater::update(QValueSource &Q_table, const std::vector<tra
     
     float q = 0.0f;
     if (!done) {
-        action_t greedy_act = Q_table.greedy_action(next_s, data[0].possible_actions, table_idx);
+        action_t greedy_act = Q_table.greedy_action(next_s, data[0].next_s_possible_actions, table_idx);
         q = Q_table(next_s, greedy_act, !table_idx);
     }
 

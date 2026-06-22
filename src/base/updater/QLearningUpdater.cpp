@@ -13,7 +13,7 @@ void QLearningUpdater::update(QValueSource& Q_table, const std::vector<transitio
     state_t s_next = data[0].next_s_;
     bool done = data[0].done_;
 
-    float q_m = Q_table.max(s_next, data[0].possible_actions);
+    float q_m = Q_table.max(s_next, data[0].next_s_possible_actions);
     float q_next = done ? 0.0f : q_m;
     float target = reward + gamma * q_next;
     Q_table(s, a) += alpha * (target - Q_table(s, a));

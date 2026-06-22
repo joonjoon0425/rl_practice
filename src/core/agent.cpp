@@ -1,5 +1,6 @@
 #include "core/agent.hpp"
 #include "core/QValueSource.hpp"
+#include <cmath>
 #include <memory>
 
 agent::agent(int state_size, int action_size,
@@ -23,7 +24,10 @@ agent::agent(int state_size, int action_size,
 void agent::observe(transition data) {
     // calculate rho_ when off policy method is used
     if (behavior_policy_ != target_policy_) {
-        data.rho_ = target_policy_->get_prob(q_tables_, data.s_, data.a_, data.possible_actions) / behavior_policy_->get_prob(q_tables_, data.s_, data.a_, data.possible_actions);
+        data.log_rho_ = std::log(target_policy_->get_prob(q_tables_, data.s_, data.a_, data.s_possible_actions))
+        - std::log(behavior_policy_->get_prob(q_tables_, data.s_, data.a_, data.s_possible_actions));
+
+        assert(data.log_rho_ != std::numeric_limits<float>::infinity() && "log_rho_ is +inf, this action cannot be chosen by behavior policy.");
     }
 
     buffer_->push_back(data);

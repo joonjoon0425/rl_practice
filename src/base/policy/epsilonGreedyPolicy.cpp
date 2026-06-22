@@ -28,11 +28,15 @@ float epsilonGreedyPolicy::get_prob(const QValueSource& Q_table_, const state_t&
 
     float prob = 0.0f;
 
-    if (max_actions[action]) {
-        prob += (1.f - epsilon_) / max_actions.count();
-    } else if (possible_actions[action]) {
+    
+    if (possible_actions[action]) {
         prob = epsilon_ / possible_actions.count();
+        
+        if (max_actions[action]) {
+            prob += (1.f - epsilon_) / max_actions.count();
+        }
     }
+    
 
     return prob;
 };

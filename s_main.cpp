@@ -40,10 +40,10 @@ int main() {
         float total_reward = 0.f;
 
         while (!terminate && !timeout) {
-            auto [next_s, reward, done, possible_actions] = env.step(cur, act);
-            auto next_a = agent->sample_action(next_s, possible_actions);
+            auto [next_s, reward, done, next_s_possible_actions] = env.step(cur, act);
+            auto next_a = agent->sample_action(next_s, next_s_possible_actions);
 
-            agent->observe({cur, act, reward, next_s, done, timeout, possible_actions, next_a});
+            agent->observe({cur, act, reward, next_s, done, timeout, {}, next_s_possible_actions, next_a});
             
             act = next_a;
             

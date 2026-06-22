@@ -13,7 +13,7 @@ void expectedSarsaUpdater::update(QValueSource& Q_table, const std::vector<trans
     float value_expec = 0.0f;
     if (!done) {
         for (int i = 0; i < Q_table.action_size(); i++) {
-            value_expec += Q_table(s_next, i) * target_policy_->get_prob(Q_table, s_next, i, data[0].possible_actions);
+            value_expec += Q_table(s_next, i) * target_policy_->get_prob(Q_table, s_next, i, data[0].next_s_possible_actions);
         }
     }
 

@@ -33,7 +33,8 @@ int main() {
 
     for (int i = 0; i < episodes; i++) {
         auto cur = env.reset(true);
-        action_t act = agent->random_action(cur, env.get_possible_actions(cur));
+        action_mask_t cur_possible_actions = env.get_possible_actions(cur);
+        action_t act = agent->random_action(cur, cur_possible_actions);
         bool terminate = false;
         bool timeout = false;
 
@@ -41,12 +42,11 @@ int main() {
         float total_reward = 0.f;
 
         while (!terminate && !timeout) {
-            auto [next_s, reward, done, possible_actions] = env.step(cur, act);
-
-            agent->observe({cur, act, reward, next_s, done, timeout, possible_actions});
-
+            auto [next_s, reward, done, next_s_possible_actions] = env.step(cur, act);
+            agent->observe({cur, act, reward, next_s, done, timeout, cur_possible_actions, next_s_possible_actions});
+            cur_possible_actions = next_s_possible_actions;
             cur = next_s;
-            act = agent->sample_action(next_s, possible_actions);
+            act = agent->sample_action(next_s, next_s_possible_actions);
             terminate = done;
             
             total_steps++;
