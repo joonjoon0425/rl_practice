@@ -23,7 +23,7 @@ agent::agent(int state_size, int action_size,
 void agent::observe(transition data) {
     // calculate rho_ when off policy method is used
     if (behavior_policy_ != target_policy_) {
-        data.rho_ = behavior_policy_->get_prob(q_tables_, data.s_, data.a_, data.possible_actions);
+        data.rho_ = target_policy_->get_prob(q_tables_, data.s_, data.a_, data.possible_actions) / behavior_policy_->get_prob(q_tables_, data.s_, data.a_, data.possible_actions);
     }
 
     buffer_->push_back(data);
