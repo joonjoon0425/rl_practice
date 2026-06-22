@@ -1,18 +1,21 @@
 #include "core/agent.hpp"
+#include "core/QValueSource.hpp"
+#include <memory>
 
 agent::agent(int state_size, int action_size,
     std::shared_ptr<policy> t_p,
     std::shared_ptr<policy> b_p,
     std::unique_ptr<buffer> buffer,
-    std::unique_ptr<updater> updater, float gamma,
-    float alpha, float init,
+    std::unique_ptr<updater> updater,
+    std::unique_ptr<QValueEstimator> estimator,
+    float gamma, float alpha, float init,
     int table_num)
 :
     target_policy_(t_p),
     behavior_policy_(b_p),
     buffer_(std::move(buffer)),
     updater_(std::move(updater)),
-    q_tables_(state_size, action_size, init, table_num),
+    q_tables_(state_size, action_size, init, table_num, std::move(estimator)),
     gamma_(gamma),
     alpha_(alpha)
 {}

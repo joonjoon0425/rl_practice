@@ -8,9 +8,9 @@ class greedyPolicy : public policy{
 public:
     greedyPolicy();
 
-    action_t get_action(const QTables& Q_table_, const state_t& state, const action_mask_t& possible_actions) const override;
+    action_t get_action(const QValueSource& Q_table_, const state_t& state, const action_mask_t& possible_actions) const override;
 
-    float get_prob(const QTables& Q_table_, const state_t& state, const action_t& action, const action_mask_t& possible_actions) const override;
+    float get_prob(const QValueSource& Q_table_, const state_t& state, const action_t& action, const action_mask_t& possible_actions) const override;
 };
 
 #endif

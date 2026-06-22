@@ -1,0 +1,1528 @@
+================================================================================
+COMBINED C++ SOURCE AND HEADER FILES
+================================================================================
+
+PROJECT: RL Practice
+This file contains all .cpp and .hpp files from the project.
+
+================================================================================
+HEADER FILES (.hpp)
+================================================================================
+
+------- include/backbone/core/common.hpp -------
+#ifndef _COMMON_HPP_
+#define _COMMON_HPP_
+#include <bitset>
+using state_t = int;
+using action_t = int;
+
+using action_mask_t = std::bitset<64>;
+using action_mask_internal_t = unsigned long long;
+
+#endif
+
+------- include/backbone/core/env.hpp -------
+#ifndef _ENV_HPP_
+#define _ENV_HPP_
+
+#include <tuple>
+#include <concepts>
+#include <vector>
+
+#include "common.hpp"
+
+
+template <typename Env>
+concept Environment = requires (Env env, typename Env::state_t s, typename Env::action_t a) {
+    typename Env::state_t;
+    typename Env::action_t;
+
+    {env.state_to_index(s)} -> std::convertible_to<std::size_t>;
+    {env.action_to_index(a)} -> std::convertible_to<std::size_t>;
+
+    {env.state_size()} -> std::convertible_to<std::size_t>;
+    {env.action_size()} -> std::convertible_to<std::size_t>;
+
+    {env.get_possible_actions(s)} -> std::convertible_to<std::vector<bool>>;
+};
+
+
+template <typename State, typename Action, typename Derived>
+class environment {
+protected:
+    int state_size_;
+    int action_size_;
+
+public:
+    using envState_t = State;
+    using envAction_t = Action;
+
+    virtual state_t reset(bool random) = 0;
+
+    virtual std::tuple<state_t, float, bool, action_mask_t> step(const state_t&, const action_t&) = 0;
+
+    environment(int s, int a) : state_size_(s), action_size_(a) {}
+
+    action_mask_t get_possible_actions(const state_t& state) const {
+        return static_cast<const Derived*>(this)->impl_get_possible_actions(state);
+    }
+
+    int state_to_index(const envState_t& state) const {
+        return static_cast<const Derived*>(this)->impl_state_to_index(state);
+    }
+
+    int action_to_index(const envAction_t& action) const {
+        return static_cast<const Derived*>(this)->impl_action_to_index(action);
+    }
+
+    envState_t index_to_state(int index) const {
+        return static_cast<const Derived*>(this)->impl_index_to_state(index);
+    }
+
+    envAction_t index_to_action(int index) const {
+        return static_cast<const Derived*>(this)->impl_index_to_action(index);
+    }
+
+    int state_size() const {return state_size_;}
+    int action_size() const {return action_size_;}
+};
+
+#endif
+
+------- include/backbone/core/schedulable.hpp -------
+#ifndef _SCHEDULABLE_HPP_
+#define _SCHEDULABLE_HPP_
+
+// interfaces
+
+class epsilonSchedulable {
+public:
+    virtual float& epsilon() = 0;
+    virtual float epsilon() const = 0;
+
+    virtual void epsilon(float) = 0;
+};
+
+#endif
+
+------- include/backbone/core/schedular.hpp -------
+#ifndef _SCHEDULAR_HPP_
+#define _SCHEDULAR_HPP_
+
+#include <functional>
+
+template <typename T>
+class schedular {
+private:
+    using decay_fn = std::function<T(T, int)>;
+
+    T& value_;
+    decay_fn decay_;
+
+public:
+    schedular(T& value, decay_fn decay)
+    : value_(value),
+      decay_(decay) {}
+
+    void step(int episode) {
+        value_ = decay_(value_, episode);
+    }
+
+    T value() const {return value_;}
+
+};
+
+#endif
+
+------- include/backbone/core/buffer.hpp -------
+#ifndef _BUFFER_HPP_
+#define _BUFFER_HPP_
+
+#include <deque>
+#include <vector>
+#include "common.hpp"
+
+struct transition {
+    state_t s_;
+    action_t a_;
+    float reward_;
+    state_t next_s_;
+    bool done_;
+    bool timeout_;
+    action_mask_t possible_actions;
+
+    // for sarsa
+    action_t next_a_;
+    // for off-policy method
+    float rho_ = 1.0f;
+};
+
+class buffer {
+protected:
+    std::deque<transition> data_;
+
+public:
+    virtual ~buffer() = default;
+
+    virtual std::vector<transition> pop() = 0;
+    virtual bool ready() const = 0;
+
+    void push_back(const transition& data) {
+        data_.push_back(data);
+    }
+
+    // implement this to throw out all the leftover values
+    std::vector<transition> flush() {
+        auto ret = std::vector<transition>(data_.begin(), data_.end());
+        data_.clear();
+        return ret;
+    }
+};
+
+#endif
+
+------- include/backbone/base/buffer/monteCarloBuffer.hpp -------
+#ifndef _MONTE_CARLO_BUFFER_HPP_
+#define _MONTE_CARLO_BUFFER_HPP_
+
+#include <core/buffer.hpp>
+
+class monteCarloBuffer : public buffer {
+public:
+    bool ready() const override;
+    std::vector<transition> pop() override;
+};
+
+#endif
+
+------- include/backbone/base/buffer/nStepBuffer.hpp -------
+#ifndef _NSTEPBUFFER_HPP_
+#define _NSTEPBUFFER_HPP_
+
+#include <core/env.hpp>
+#include <core/buffer.hpp>
+
+class nStepBuffer : public buffer {
+protected:
+    int steps_;
+public:
+    nStepBuffer(int steps);
+
+    std::vector<transition> pop() override;
+
+    bool ready() const override;
+};
+
+#endif
+
+------- include/backbone/base/updater/QLearningUpdater.hpp -------
+#ifndef _QLEARNING_UPDATER_HPP_
+#define _QLEARNING_UPDATER_HPP_
+
+#include "core/updater.hpp"
+#include <cassert>
+#include "core/common.hpp"
+#include <cassert>
+
+class QLearningUpdater : public updater {
+public:
+    QLearningUpdater();
+    void update(QValueSource& Q_table, const std::vector<transition>& data, float gamma, float alpha) override;
+};
+
+#endif
+
+------- include/backbone/base/updater/expectedSarsaUpdater.hpp -------
+#ifndef _EXPECTED_SARSA_UPDATER
+#define _EXPECTED_SARSA_UPDATER
+
+#include <core/updater.hpp>
+#include <core/policy.hpp>
+#include <memory>
+
+class expectedSarsaUpdater : public updater{
+private:
+    std::shared_ptr<policy> target_policy_;
+
+public:
+    expectedSarsaUpdater(std::shared_ptr<policy> target_policy) : target_policy_(target_policy) {}
+
+    void update(QValueSource& Q_table, const std::vector<transition>& data, float gamma, float alpha) override;
+};
+
+#endif
+
+------- include/backbone/base/policy/greedyPolicy.hpp -------
+#ifndef _GREEDY_POLICY_HPP_
+#define _GREEDY_POLICY_HPP_
+
+#include "core/policy.hpp"
+#include "core/common.hpp"
+
+class greedyPolicy : public policy{
+public:
+    greedyPolicy();
+
+    action_t get_action(const QValueSource& Q_table_, const state_t& state, const action_mask_t& possible_actions) const override;
+
+    float get_prob(const QValueSource& Q_table_, const state_t& state, const action_t& action, const action_mask_t& possible_actions) const override;
+};
+
+#endif
+
+------- include/backbone/base/updater/monteCarloUpdater.hpp -------
+#ifndef _MONTE_CARLO_UPDATER_HPP_
+#define _MONTE_CARLO_UPDATER_HPP_
+
+#include <core/updater.hpp>
+
+class onPolicyMonteCarloUpdater : public updater {
+private:
+    bool every_visit_;
+    std::vector<int> N_;
+
+public:
+    onPolicyMonteCarloUpdater(bool every_visit, int state_size, int action_size)
+    : every_visit_(every_visit),
+      N_(state_size * action_size, 0)
+      {}
+
+    void update(QValueSource &Q_table, const std::vector<transition> &data, float gamma, float alpha) override;
+};
+
+class offPolicyMonteCarloUpdater : public updater {
+private:
+    std::vector<float> C_;
+
+public:
+    offPolicyMonteCarloUpdater(int state_size, int action_size)
+    : C_(state_size * action_size, 0)
+      {}
+
+    void update(QValueSource &Q_table, const std::vector<transition> &data, float gamma, float alpha) override;
+};
+
+#endif
+
+------- include/backbone/base/updater/sarsaUpdater.hpp -------
+#ifndef _SARSA_UPDATER_HPP_
+#define _SARSA_UPDATER_HPP_
+
+#include "core/updater.hpp"
+
+class sarsaUpdater : public updater {
+public:
+    sarsaUpdater();
+
+    void update(QValueSource& Q_table, const std::vector<transition>& data, float gamma, float alpha) override;
+};
+
+#endif
+
+------- include/backbone/core/policy.hpp -------
+#ifndef _POLICY_HPP_
+#define _POLICY_HPP_
+
+#include <vector>
+#include <set>
+#include "schedulable.hpp"
+#include "QValueSource.hpp"
+#include "common.hpp"
+
+using state_t = int;
+using action_t = int;
+
+class policy {
+protected:
+    mutable std::vector<action_t> buffer;
+
+public:
+    virtual ~policy() = default;
+
+    virtual action_t get_action(const QValueSource& Q_table_, const state_t& state, const action_mask_t& possible_actions) const = 0;
+    virtual float get_prob(const QValueSource& Q_table_, const state_t& state, const action_t& action, const action_mask_t& possible_actions) const = 0;
+
+    action_t random_action(const state_t& cur, const action_mask_t& possible_actions) const;
+};
+
+
+#endif
+
+------- include/backbone/core/updater.hpp -------
+#ifndef _UPDATER_HPP_
+#define _UPDATER_HPP_
+
+#include <vector>
+#include "buffer.hpp"
+#include "QValueSource.hpp"
+
+using state_t = int;
+using action_t = int;
+
+class updater {
+public:
+    virtual ~updater() = default;
+
+    virtual void update(QValueSource& Q_table, const std::vector<transition>& data, float gamma, float alpha) = 0;
+};
+
+
+#endif
+
+------- include/backbone/base/policy/epsilonGreedyPolicy.hpp -------
+#ifndef _EPSILON_GREEDY_POLICY_HPP_
+#define _EPSILON_GREEDY_POLICY_HPP_
+
+#include "core/policy.hpp"
+#include "core/common.hpp"
+
+class epsilonGreedyPolicy : public policy, public epsilonSchedulable {
+protected:
+    float epsilon_;
+
+public:
+    epsilonGreedyPolicy(float epsilon);
+
+    float& epsilon() override {return epsilon_;}
+    float epsilon() const override {return epsilon_;}
+    void epsilon(float val) override {epsilon_ = val;}
+
+    action_t get_action(const QValueSource& Q_table_, const state_t& state, const action_mask_t& possible_actions) const override;
+
+    action_t greedy_action(const QValueSource& Q_table_, const state_t& state, const action_mask_t& possible_actions) const;
+
+    float get_prob(const QValueSource& Q_table_, const state_t& state, const action_t& action, const action_mask_t& possible_actions) const override;
+};
+
+#endif
+
+------- include/backbone/base/updater/doubleQLearningUpdater.hpp -------
+#ifndef _DOUBLE_QLERNING_UPDATER_HPP_
+#define _DOUBLE_QLERNING_UPDATER_HPP_
+
+#include <core/updater.hpp>
+
+class doubleQLearningUpdater : public updater {
+public:
+    void update(QValueSource &Q_table, const std::vector<transition> &data, float gamma, float alpha) override;
+};
+
+#endif
+
+------- include/backbone/base/QValueEstimator/arithmeticMeanEstimator.hpp -------
+#ifndef _ARITHMETIC_MEAN_ESTIMATOR_HPP_
+#define _ARITHMETIC_MEAN_ESTIMATOR_HPP_
+
+#include <core/QValueEstimator.hpp>
+
+class arithmeticMeanEstimator : public QValueEstimator {
+public:
+    float estimate(const std::vector<float>& Q_table, int table_num, int state_size, int action_size, int state, int action) const override;
+};
+
+#endif
+
+------- include/backbone/core/QValueSource.hpp -------
+#ifndef _QVALUESOURCE_HPP_
+#define _QVALUESOURCE_HPP_
+
+#include <cassert>
+#include <memory>
+#include <vector>
+#include "core/common.hpp"
+#include <core/QValueEstimator.hpp>
+
+using state_t = int;
+using action_t = int;
+
+class QValueSource {
+private:
+    std::vector<float> Q_table_;
+    int table_size_;
+    int state_size_;
+    int action_size_;
+
+    std::unique_ptr<QValueEstimator> estimator_;
+
+public:
+    struct Proxy {
+        QValueSource& source;
+        state_t state;
+        action_t action;
+
+        Proxy& operator=(float val) {
+            if (source.estimator_ == nullptr) {
+                source(state, action, 0) = val;
+            } else {
+                assert(q_value_source.estimator_ == nullptr && "estimator should not exist");
+            }
+            return (*this);
+        }
+
+        Proxy& operator+=(float val) {
+            return (*this) = float(*this) + val;
+        }
+
+        operator float() const {
+            if (source.estimator_) {
+                return source.estimator_->estimate(
+                    source.Q_table_,
+                    source.table_size_,
+                    source.state_size_,
+                    source.action_size_, state, action);
+            } else {
+                return source(state, action, 0);
+            }
+        }
+    };
+
+    QValueSource(int state_size, int action_size, float init = 0.0f, int table_size = 1, std::unique_ptr<QValueEstimator> estimator = nullptr);
+    float& operator()(state_t state, action_t action, int table);
+    Proxy operator()(state_t state, action_t action);
+    float operator()(state_t state, action_t action, int table = -1) const;
+
+    action_t greedy_action(const state_t& state, const action_mask_t& possible_actions, int table = -1) const;
+    action_mask_t greedy_actions(const state_t& state, const action_mask_t& possible_actions, int table = -1) const;
+
+    float max(const state_t& state, const action_mask_t& possible_actions, int table = -1) const;
+
+    int index(const state_t& state, const action_t& action) {
+        return state * action_size_ + action;
+    }
+
+    int state_size() const {
+        return state_size_;
+    }
+
+    int action_size() const {
+        return action_size_;
+    }
+
+    int table_size() const {
+        return table_size_;
+    }
+};
+
+#endif
+
+------- include/backbone/core/QValueEstimator.hpp -------
+#ifndef _QVALUEESTIMATOR_HPP_
+#define _QVALUEESTIMATOR_HPP_
+
+#include <vector>
+
+class QValueEstimator {
+public:
+    virtual ~QValueEstimator() = default;
+    virtual float estimate(const std::vector<float>& Q_table, int table_num, int state_size, int action_size, int state, int action) const = 0;
+};
+
+#endif
+
+------- include/backbone/core/agent.hpp -------
+#ifndef _AGENT_HPP_
+#define _AGENT_HPP_
+
+#include "buffer.hpp"
+#include "core/QValueSource.hpp"
+#include "policy.hpp"
+#include "updater.hpp"
+#include "QValueSource.hpp"
+#include "common.hpp"
+
+#include <cassert>
+#include <memory>
+#include <limits>
+
+class agent {
+protected:
+    QValueSource q_tables_;
+
+    std::shared_ptr<policy> target_policy_;
+    std::shared_ptr<policy> behavior_policy_;
+    std::unique_ptr<buffer> buffer_;
+    std::unique_ptr<updater> updater_;
+
+    float gamma_;
+    float alpha_;
+
+public:
+    agent(int state_size, int action_size,
+        std::shared_ptr<policy> t_p,
+        std::shared_ptr<policy> b_p,
+        std::unique_ptr<buffer> buffer,
+        std::unique_ptr<updater> updater,
+        std::unique_ptr<QValueEstimator> estimator,
+        float gamma, float alpha,
+        float init, int table_num);
+
+    void observe(transition data);
+
+    action_t sample_action(const state_t& state, const action_mask_t& possible_actions);
+    action_t predict_action(const state_t& state, const action_mask_t& possible_actions);
+    action_t random_action(const state_t& state, const action_mask_t& possible_actions);
+
+    // debug?
+    action_t greedy_action(const state_t& state, const action_mask_t& possible_actions);
+    // debug
+    float max_q(const state_t& state, const action_mask_t& possible_actions);
+
+
+    void flush_buffer();
+
+    //getter and setter
+    float& gamma() {return gamma_;}
+    float& alpha() {return alpha_;}
+    std::shared_ptr<policy> target_policy() {return target_policy_;}
+    std::shared_ptr<policy> behavior_policy() {return behavior_policy_;};
+
+
+};
+
+
+#endif
+
+------- include/backbone/register.hpp -------
+#ifndef _REGISTER_HPP_
+#define _REGISTER_HPP_
+
+#include "core/agent.hpp"
+
+#include "base/policy/greedyPolicy.hpp"
+#include "base/policy/epsilonGreedyPolicy.hpp"
+
+#include "base/buffer/nStepBuffer.hpp"
+#include "base/buffer/monteCarloBuffer.hpp"
+
+#include <base/updater/sarsaUpdater.hpp>
+#include <base/updater/QLearningUpdater.hpp>
+#include <base/updater/monteCarloUpdater.hpp>
+#include <base/updater/expectedSarsaUpdater.hpp>
+#include <base/updater/doubleQLearningUpdater.hpp>
+
+#include <base/QValueEstimator/arithmeticMeanEstimator.hpp>
+
+#include "core/QValueSource.hpp"
+#include "core/schedular.hpp"
+
+#include <memory>
+
+enum class algoType {sarsa, QLearning, firstVisitOnPolicyMC, everyVisitOnPolicyMC, offPolicyMC, expectedSarsa, doubleQLearning};
+
+std::shared_ptr<agent> create_agent(int state_size, int action_size, algoType a, float epsilon, float gamma = 0.9f, float alpha = 0.5f, float init = 0.0f) {
+    std::shared_ptr<policy> t_p = nullptr;
+    std::shared_ptr<policy> b_p = nullptr;
+    std::unique_ptr<buffer> buffer = nullptr;
+    std::unique_ptr<updater> updater = nullptr;
+    std::unique_ptr<QValueEstimator> estimator = nullptr;
+    int table_num = 1;
+
+    switch (a) {
+        case algoType::sarsa:
+            t_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
+            b_p = t_p;
+            buffer = std::make_unique<nStepBuffer>(1);
+            updater = std::make_unique<sarsaUpdater>();
+            break;
+        case algoType::QLearning:
+            t_p = std::make_shared<greedyPolicy>();
+            b_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
+            buffer = std::make_unique<nStepBuffer>(1);
+            updater = std::make_unique<QLearningUpdater>();
+            break;
+        case algoType::doubleQLearning:
+            t_p = std::make_shared<greedyPolicy>();
+            b_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
+            buffer = std::make_unique<nStepBuffer>(1);
+            updater = std::make_unique<doubleQLearningUpdater>();
+            estimator = std::make_unique<arithmeticMeanEstimator>();
+            table_num = 2;
+            break;
+        case algoType::firstVisitOnPolicyMC:
+            t_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
+            b_p = t_p;
+            buffer = std::make_unique<monteCarloBuffer>();
+            updater = std::make_unique<onPolicyMonteCarloUpdater>(false, state_size, action_size);
+            break;
+        case algoType::everyVisitOnPolicyMC:
+            t_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
+            b_p = t_p;
+            buffer = std::make_unique<monteCarloBuffer>();
+            updater = std::make_unique<onPolicyMonteCarloUpdater>(true, state_size, action_size);
+            break;
+        case algoType::offPolicyMC:
+            t_p = std::make_shared<greedyPolicy>();
+            b_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
+            buffer = std::make_unique<monteCarloBuffer>();
+            updater = std::make_unique<offPolicyMonteCarloUpdater>(state_size, action_size);
+            break;
+        case algoType::expectedSarsa:
+            t_p = std::make_shared<greedyPolicy>();
+            b_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
+            buffer = std::make_unique<nStepBuffer>(1);
+            updater = std::make_unique<expectedSarsaUpdater>(t_p);
+            break;
+    }
+
+
+    return std::make_shared<agent>(state_size, action_size, t_p, b_p, std::move(buffer), std::move(updater), std::move(estimator), gamma, alpha, init, table_num);
+}
+
+#endif
+
+------- include/gridworld/gridworld.hpp -------
+#ifndef _GRIDWORLD_HPP_
+#define _GRIDWORLD_HPP_
+
+#include "core/env.hpp"
+#include <algorithm>
+
+namespace gridworld {
+    struct point2D {
+        int x_;
+        int y_;
+
+        bool operator==(const point2D& point) const {
+            return x_ == point.x_ && y_ == point.y_;
+        }
+    };
+
+    enum class direction2D : int {UP, DOWN, LEFT, RIGHT};
+
+    class grid2D : public environment<point2D, direction2D, grid2D> {
+    public:
+        grid2D(int width, int height, envState_t start, envState_t goal, envState_t trap);
+
+        state_t reset(bool random) override;
+        std::tuple<state_t, float, bool, action_mask> step(const state_t&, const action_t&) override;
+
+    private:
+        int width_;
+        int height_;
+
+        envState_t start_;
+        envState_t goal_;
+        envState_t trap_;
+
+    public:
+        int width() const {return width_;}
+        int height() const {return height_;}
+
+        envState_t trap() const {return trap_;}
+        envState_t goal() const {return goal_;}
+        envState_t start() const {return start_;}
+
+        int impl_state_to_index(const envState_t& state) const {
+            return state.y_ * width_ + state.x_;
+        }
+
+        int impl_action_to_index(const envAction_t& action) const {
+            return static_cast<int>(action);
+        }
+
+        envState_t impl_index_to_state(int index) const {
+            int x_ = index % width_;
+            int y_ = index / width_;
+
+            return {x_, y_};
+        }
+
+        envAction_t impl_index_to_action(int index) const {
+            return static_cast<envAction_t>(index);
+        }
+
+        action_mask impl_get_possible_actions(const state_t& state_) const {
+            action_mask possible_actions;
+            possible_actions.set();
+            envState_t state = index_to_state(state_);
+            if (state.x_ == width_ - 1) possible_actions[action_to_index(envAction_t::RIGHT)] = false;
+            else if (state.x_ == 0) possible_actions[action_to_index(envAction_t::LEFT)] = false;
+
+            if (state.y_ == height_ - 1) possible_actions[action_to_index(envAction_t::UP)] = false;
+            else if (state.y_ == 0) possible_actions[action_to_index(envAction_t::DOWN)] = false;
+
+            return possible_actions;
+        }
+    };
+}
+
+#endif
+
+================================================================================
+SOURCE FILES (.cpp)
+================================================================================
+
+------- src/core/policy.cpp -------
+#include <core/policy.hpp>
+
+action_t policy::random_action(const state_t& state, const action_mask_t& possible_actions) const {
+    action_mask_internal_t mask = possible_actions.to_ullong();
+    assert(mask > 0 && "no actions");
+    int size = possible_actions.count();
+
+    int rand = std::rand() % size;
+
+    for (int i = 0; i < rand; i++) mask &= (mask - 1);
+
+    assert(mask != 0 && "mask became zero unexpectedly");
+    return __builtin_ctzll(mask);
+}
+
+------- src/base/buffer/monteCarloBuffer.cpp -------
+#include <base/buffer/monteCarloBuffer.hpp>
+
+bool monteCarloBuffer::ready() const {
+    if (data_.empty()) return false;
+    return data_.back().done_;
+}
+
+std::vector<transition> monteCarloBuffer::pop() {
+    std::vector<transition> ret(std::make_move_iterator(data_.begin()), std::make_move_iterator(data_.end()));
+    data_.clear();
+    return ret;
+}
+
+------- src/base/buffer/nStepBuffer.cpp -------
+#include "base/buffer/nStepBuffer.hpp"
+#include <iterator>
+
+nStepBuffer::nStepBuffer(int steps) : steps_(steps) {}
+
+std::vector<transition> nStepBuffer::pop() {
+    auto ret_data = std::vector<transition>(std::make_move_iterator(data_.begin()), std::make_move_iterator(data_.begin() + steps_));
+    data_.pop_front();
+    return ret_data;
+}
+
+bool nStepBuffer::ready() const {
+    if (data_.size() >= steps_) {
+        //std::cout << "DEBUG: READY FOR UPDATE\n";
+        return true;
+    }
+    return false;
+}
+
+------- src/gridworld/gridworld.cpp -------
+#include <gridworld.hpp>
+#include <cstdlib>
+
+namespace gridworld {
+    grid2D::grid2D(int width, int height, envState_t start, envState_t goal, envState_t trap)
+    : width_(width),
+      height_(height),
+      start_(start),
+      goal_(goal),
+      trap_(trap),
+      environment(width * height, 4)
+    {}
+
+    state_t grid2D::reset(bool random) {
+        if (random) return std::rand() % state_size_;
+
+        return state_to_index(start_);
+    }
+
+    std::tuple<state_t, float, bool, action_mask_t> grid2D::step(const state_t& state, const action_t& action) {
+        // assumes that only possible actions are received as input
+        envState_t state_ = index_to_state(state);
+        envAction_t act_ = index_to_action(action);
+        switch(act_) {
+            case envAction_t::UP: state_.y_++; break;
+            case envAction_t::DOWN: state_.y_--; break;
+            case envAction_t::LEFT: state_.x_--; break;
+            case envAction_t::RIGHT: state_.x_++; break;
+        };
+
+        float reward = -2.f;
+        bool done = false;
+        if (state_ == goal_) {
+            reward = 100.0f;
+            done = true;
+        } else if (state_ == trap_) {
+            reward = -100.0f;
+            done = true;
+        }
+
+        int idx = state_to_index(state_);
+
+        return {idx, reward, done, get_possible_actions(idx)};
+    }
+}
+
+------- src/base/policy/epsilonGreedyPolicy.cpp -------
+#include "base/policy/epsilonGreedyPolicy.hpp"
+#include <cstdlib>
+#include <limits>
+
+epsilonGreedyPolicy::epsilonGreedyPolicy(float epsilon) : epsilon_(epsilon) {}
+
+action_t epsilonGreedyPolicy::get_action(const QValueSource& Q_table_, const state_t& state, const action_mask_t& possible_actions) const {
+    action_t ret_action;
+    float rand_val = static_cast<float>(std::rand()) / RAND_MAX;
+
+    if (rand_val < epsilon_) {
+        //explore
+        ret_action = random_action(state, possible_actions);
+    } else {
+        //exploit
+        ret_action = greedy_action(Q_table_, state, possible_actions);
+    }
+
+    return ret_action;
+}
+
+action_t epsilonGreedyPolicy::greedy_action(const QValueSource& Q_table_, const state_t& state, const action_mask_t& possible_actions) const {
+    return Q_table_.greedy_action(state, possible_actions);
+}
+
+float epsilonGreedyPolicy::get_prob(const QValueSource& Q_table_, const state_t& state, const action_t& action, const action_mask_t& possible_actions) const {
+    action_mask_t max_actions = Q_table_.greedy_actions(state, possible_actions);
+
+    float prob = 0.0f;
+
+    if (max_actions[action]) {
+        prob += (1.f - epsilon_) / max_actions.count();
+    } else if (possible_actions[action]) {
+        prob = epsilon_ / possible_actions.count();
+    }
+
+    return prob;
+};
+
+------- src/base/policy/greedyPolicy.cpp -------
+#include "base/policy/greedyPolicy.hpp"
+#include <cstdlib>
+#include <limits>
+
+greedyPolicy::greedyPolicy(){}
+
+action_t greedyPolicy::get_action(const QValueSource& Q_table_, const state_t& state, const action_mask_t& possible_actions) const {
+    return Q_table_.greedy_action(state, possible_actions);
+}
+
+float greedyPolicy::get_prob(const QValueSource& Q_table_, const state_t& state, const action_t& action, const action_mask_t& possible_actions) const {
+    auto max_actions = Q_table_.greedy_actions(state, possible_actions);
+    return float(max_actions[action]) / max_actions.count();
+};
+
+------- src/base/updater/QLearningUpdater.cpp -------
+#include "base/updater/QLearningUpdater.hpp"
+#include <limits>
+
+QLearningUpdater::QLearningUpdater(){}
+
+void QLearningUpdater::update(QValueSource& Q_table, const std::vector<transition>& data, float gamma, float alpha) {
+    // requires two transition data
+    assert(data.size() == 1 && "qlearning requires one update data");
+
+    state_t s = data[0].s_;
+    action_t a = data[0].a_;
+    float reward = data[0].reward_;
+    state_t s_next = data[0].next_s_;
+    bool done = data[0].done_;
+
+    float q_m = Q_table.max(s_next, data[0].possible_actions);
+    float q_next = done ? 0.0f : q_m;
+    float target = reward + gamma * q_next;
+    Q_table(s, a) += alpha * (target - Q_table(s, a));
+}
+
+
+------- src/base/updater/sarsaUpdater.cpp -------
+#include "base/updater/sarsaUpdater.hpp"
+#include <cassert>
+
+sarsaUpdater::sarsaUpdater(){}
+
+void sarsaUpdater::update(QValueSource& Q_table, const std::vector<transition>& data, float gamma, float alpha) {
+    // requires one transition data
+    assert(data.size() == 1 && "sarsa requires one update data");
+
+    state_t s = data[0].s_;
+    action_t a = data[0].a_;
+    float reward = data[0].reward_;
+    state_t s_next = data[0].next_s_;
+    action_t a_next = data[0].next_a_;
+    bool done = data[0].done_;
+
+    float q_next = done ? 0.0f : Q_table(s_next, a_next);
+    float target = reward + gamma * q_next;
+    Q_table(s, a) += alpha * (target - Q_table(s, a));
+}
+
+------- src/base/updater/monteCarloUpdater.cpp -------
+#include <base/updater/monteCarloUpdater.hpp>
+#include <unordered_set>
+
+void onPolicyMonteCarloUpdater::update(
+    QValueSource &Q_table,
+    const std::vector<transition> &data,
+    float gamma, float alpha
+) {
+    int len = data.size();
+    std::vector<float> G(len + 1, 0);
+    std::unordered_set<int> seen;
+
+    for (int i = len - 1; i >= 0; i--) {
+        G[i] = gamma * G[i + 1] + data[i].reward_;
+    }
+
+    for (int i = 0; i < len; i++) {
+        int saIdx = Q_table.index(data[i].s_, data[i].a_);
+        if (every_visit_ || seen.find(saIdx) == seen.end()) {
+            N_[saIdx]++;
+            Q_table(data[i].s_, data[i].a_) += (G[i] - Q_table(data[i].s_, data[i].a_)) / N_[saIdx];
+            seen.insert(saIdx);
+        }
+    }
+}
+
+void offPolicyMonteCarloUpdater::update(
+    QValueSource &Q_table,
+    const std::vector<transition> &data,
+    float gamma, float alpha
+) {
+    int len = data.size();
+    float G = 0;
+    float W = 1;
+
+    for (int i = len - 1; i >= 0; i--) {
+        if (W == 0) break;
+        int saIdx = Q_table.index(data[i].s_, data[i].a_);
+        G = gamma * G + data[i].reward_;
+        C_[saIdx] += W;
+        Q_table(data[i].s_, data[i].a_) += W / C_[saIdx] * (G - Q_table(data[i].s_, data[i].a_));
+        W *= data[i].rho_;
+    }
+}
+
+
+------- src/base/updater/expectedSarsaUpdater.cpp -------
+#include <base/updater/expectedSarsaUpdater.hpp>
+
+void expectedSarsaUpdater::update(QValueSource& Q_table, const std::vector<transition>& data, float gamma, float alpha) {
+    // requires one transition data
+    assert(data.size() == 1 && "sarsa requires one update data");
+
+    state_t s = data[0].s_;
+    action_t a = data[0].a_;
+    float reward = data[0].reward_;
+    state_t s_next = data[0].next_s_;
+    bool done = data[0].done_;
+
+    float value_expec = 0.0f;
+    if (!done) {
+        for (int i = 0; i < Q_table.action_size(); i++) {
+            value_expec += Q_table(s_next, i) * target_policy_->get_prob(Q_table, s_next, i, data[0].possible_actions);
+        }
+    }
+
+    float target = reward + gamma * value_expec;
+    Q_table(s, a) += alpha * (target - Q_table(s, a));
+}
+
+------- src/base/updater/doubleQLearningUpdater.cpp -------
+#include <base/updater/doubleQLearningUpdater.hpp>
+
+void doubleQLearningUpdater::update(QValueSource &Q_table, const std::vector<transition> &data, float gamma, float alpha) {
+    assert(Q_table.table_size() == 2 && "Q table size is not 2");
+    state_t s = data[0].s_;
+    action_t a = data[0].a_;
+    float reward = data[0].reward_;
+    state_t next_s = data[0].next_s_;
+    bool done = data[0].done_;
+
+    bool table_idx = std::rand() % 2;
+
+    float q = 0.0f;
+    if (!done) {
+        action_t greedy_act = Q_table.greedy_action(next_s, data[0].possible_actions, table_idx);
+        q = Q_table(next_s, greedy_act, !table_idx);
+    }
+
+    float target = reward + gamma * q;
+
+    Q_table(s, a, table_idx) += alpha * (target - Q_table(s, a, table_idx));
+}
+
+------- src/core/QValueSource.cpp -------
+#include "core/QValueSource.hpp"
+#include "core/common.hpp"
+#include <cassert>
+#include <limits>
+
+QValueSource::QValueSource(int state_size, int action_size, float init, int table_size, std::unique_ptr<QValueEstimator> estimator)
+: table_size_(table_size),
+    state_size_(state_size),
+    action_size_(action_size),
+    Q_table_(table_size * state_size * action_size, init),
+    estimator_(std::move(estimator)) {}
+
+float& QValueSource::operator()(state_t state, action_t action, int table) {
+    assert(0 <= table && table < table_num_ && "out of index");
+
+    return Q_table_[table * (state_size_ * action_size_) + state * action_size_ + action];
+    // implement qtable estimator here! For now, we use single one.
+}
+
+QValueSource::Proxy QValueSource::operator()(state_t state, action_t action) {
+    return Proxy {*this, state, action};
+}
+
+float QValueSource::operator()(state_t state, action_t action, int table) const {
+    assert(-1 <= table && table < table_num_ && "out of index");
+
+    if (table != -1) return Q_table_[table * (state_size_ * action_size_) + state * action_size_ + action];
+    else return Q_table_[state * action_size_ + action]; // implement qtable estimator here! For now, we use single one.
+}
+
+action_t QValueSource::greedy_action(const state_t& state, const action_mask_t& possible_actions, int table) const {
+    auto max_actions = greedy_actions(state, possible_actions, table);
+    action_mask_internal_t mask = max_actions.to_ullong();
+
+    assert(mask > 0 && "no actions");
+    int size = max_actions.count();
+
+    int rand = std::rand() % size;
+
+    for (int i = 0; i < rand; i++) mask &= (mask - 1);
+
+    assert(mask != 0 && "mask became zero unexpectedly");
+    return __builtin_ctzll(mask);
+}
+
+action_mask_t QValueSource::greedy_actions(const state_t& state, const action_mask_t& possible_actions, int table) const {
+    action_mask_t max_actions;
+    action_mask_internal_t mask = possible_actions.to_ullong();
+    float max_ = -std::numeric_limits<float>::infinity();
+    assert(mask > 0 && "no possible actions");
+
+    while (mask > 0) {
+        int action = __builtin_ctzll(mask);
+        float q = (*this)(state, action, table);
+
+        if (max_ < q) {
+            max_actions.reset();
+            max_actions |= 1ULL << action;
+            max_ = q;
+        } else if (max_ - q < 1e-7f) {
+            max_actions |= 1ULL << action;
+        }
+        mask &= (mask - 1);
+    }
+
+    return max_actions;
+}
+
+float QValueSource::max(const state_t& state, const action_mask_t& possible_actions, int table) const {
+    action_mask_internal_t mask = possible_actions.to_ullong();
+    assert(mask > 0 && "no possible actions");
+    float max_ = -std::numeric_limits<float>::infinity();
+
+    while (mask > 0) {
+        int action = __builtin_ctzll(mask);
+        float q = (*this)(state, action, table);
+        max_ = q < max_ ? max_ : q;
+        mask &= (mask - 1);
+    }
+
+    return max_;
+}
+
+------- src/base/QValueEstimator/arithmeticMeanEstimator.cpp -------
+#include <base/QValueEstimator/arithmeticMeanEstimator.hpp>
+
+float arithmeticMeanEstimator::estimate(
+    const std::vector<float>& Q_table,
+    int table_num, int state_size, int action_size,
+    int state, int action
+) const
+{
+    float avg = 0.0f;
+    int offset = state * action_size + action;
+    for (int t = 0; t < table_num; t++) {
+        avg += Q_table[t * state_size + offset];
+    }
+
+    return avg / table_num;
+}
+
+------- src/core/agent.cpp -------
+#include "core/agent.hpp"
+#include "core/QValueSource.hpp"
+#include <memory>
+
+agent::agent(int state_size, int action_size,
+    std::shared_ptr<policy> t_p,
+    std::shared_ptr<policy> b_p,
+    std::unique_ptr<buffer> buffer,
+    std::unique_ptr<updater> updater,
+    std::unique_ptr<QValueEstimator> estimator,
+    float gamma, float alpha, float init,
+    int table_num)
+:
+    target_policy_(t_p),
+    behavior_policy_(b_p),
+    buffer_(std::move(buffer)),
+    updater_(std::move(updater)),
+    q_tables_(state_size, action_size, init, table_num, std::move(estimator)),
+    gamma_(gamma),
+    alpha_(alpha)
+{}
+
+void agent::observe(transition data) {
+    // calculate rho_ when off policy method is used
+    if (behavior_policy_ != target_policy_) {
+        data.rho_ = behavior_policy_->get_prob(q_tables_, data.s_, data.a_, data.possible_actions);
+    }
+
+    buffer_->push_back(data);
+    if (buffer_->ready()) {
+        //std::cout << "DEBUG: READY FOR UPDATE\n";
+        updater_->update(q_tables_, buffer_->pop(), gamma_, alpha_);
+    }
+}
+
+action_t agent::sample_action(const state_t& state, const action_mask_t& possible_actions) {
+    if (behavior_policy_) return behavior_policy_->get_action(q_tables_, state, possible_actions);
+    return target_policy_->get_action(q_tables_, state, possible_actions);
+}
+
+action_t agent::predict_action(const state_t& state, const action_mask_t& possible_actions) {
+    return target_policy_->get_action(q_tables_, state, possible_actions);
+}
+
+action_t agent::random_action(const state_t& state, const action_mask_t& possible_actions) {
+    action_mask_internal_t mask = possible_actions.to_ullong();
+    assert(mask > 0 && "no actions");
+    int size = possible_actions.count();
+
+    int rand = std::rand() % size;
+
+    for (int i = 0; i < rand; i++) mask &= (mask - 1);
+
+    assert(mask != 0 && "mask became zero unexpectedly");
+    return __builtin_ctzll(mask);
+}
+
+// debug?
+action_t agent::greedy_action(const state_t& state, const action_mask_t& possible_actions) {
+    float max = -std::numeric_limits<float>::infinity();
+    std::vector<action_t> buffer;
+
+    for (int i = 0; i < possible_actions.size(); i++) {
+        if (possible_actions[i]) {
+            float q = q_tables_(state, i);
+            if (q > max) {
+                max = q;
+                buffer.clear();
+                buffer.push_back(i);
+            } else if (max - q < 1e-7f) {
+                buffer.push_back(i);
+            }
+        }
+    }
+
+    return buffer[std::rand() % buffer.size()];
+}
+// debug
+float agent::max_q(const state_t& state, const action_mask_t& possible_actions) {
+    float max = -std::numeric_limits<float>::infinity();
+
+    for (int i = 0; i < possible_actions.size(); i++) {
+        if (possible_actions[i]) {
+            float q = q_tables_(state, i);
+            max = max < q ? q : max;
+        }
+    }
+
+    return max;
+}
+
+void agent::flush_buffer() {
+    auto leftover = buffer_->flush();
+    if (leftover.empty() || leftover.back().timeout_) return;
+    else updater_->update(q_tables_, leftover, gamma_, alpha_);
+}
+
+
+------- mc_main.cpp -------
+#include "core/schedulable.hpp"
+#include "core/schedular.hpp"
+#include <cassert>
+#include <gridworld.hpp>
+#include <limits>
+#include <memory>
+#include <register.hpp>
+#include <print>
+
+void print_policy_map(std::shared_ptr<agent> agent, const gridworld::grid2D& env);
+
+int main() {
+    int w = 15;
+    int h = 15;
+    float init = 0.0f;
+
+    gridworld::grid2D env(w, h, {0, 0}, {14, 14}, {13, 13});
+    // SARSA
+    auto agent = create_agent(env.state_size(), env.action_size(), algoType::offPolicyMC, 1.0);
+    auto ptr = std::dynamic_pointer_cast<epsilonSchedulable>(agent->behavior_policy());
+    assert(ptr != nullptr && "dynamic cast failure");
+
+    schedular<float> eps_exp_sche((ptr->epsilon()),
+        [](float val, int _) {
+            float ret = val * 0.999954f;
+            return ret < 0.1f ? 0.1f : ret;
+        }
+    );
+
+    int episodes = 1000000;
+
+    int max_stepped = std::numeric_limits<int>::min();
+
+    for (int i = 0; i < episodes; i++) {
+        auto cur = env.reset(true);
+        action_t act = agent->random_action(cur, env.get_possible_actions(cur));
+        bool terminate = false;
+        bool timeout = false;
+
+        int total_steps = 0;
+        float total_reward = 0.f;
+
+        while (!terminate && !timeout) {
+            auto [next_s, reward, done, possible_actions] = env.step(cur, act);
+
+            agent->observe({cur, act, reward, next_s, done, timeout, possible_actions});
+
+            cur = next_s;
+            act = agent->sample_action(next_s, possible_actions);
+            terminate = done;
+
+            total_steps++;
+            total_reward += reward;
+
+            if(total_steps > 5000) timeout = true;
+        }
+        eps_exp_sche.step(i);
+
+        agent->flush_buffer();
+
+        max_stepped = max_stepped < total_steps ? total_steps : max_stepped;
+
+        if ((i + 1) % 10000 == 0) {
+            std::print("EPISODE {}: TOTAL STEPS = {}, TOTAL REWARD = {}\n", i + 1, total_steps, total_reward);
+        }
+    }
+    std::print("epsilon: {}\n", eps_exp_sche.value());
+    std::println("MAXIMUM STEPS: {}", max_stepped);
+    print_policy_map(agent, env);
+}
+
+void print_policy_map(std::shared_ptr<agent> agent, const gridworld::grid2D& env) {
+    const char* symbol[] = {"↑", "↓", "←", "→"};
+    gridworld::grid2D::envState_t p{0, 0};
+
+    for (int y = env.height() - 1; y >= 0; y--) {
+        for (int x = 0; x < env.width(); x++) {
+            p.x_ = x;
+            p.y_ = y;
+
+            if (p == env.trap()) {
+                std::print("T\t");
+            } else if (p == env.goal()) {
+                std::print("G\t");
+            } else {
+                std::print("{}\t",
+                    symbol[static_cast<int>(agent->greedy_action(env.state_to_index(p), env.get_possible_actions(env.state_to_index(p))))],
+                    agent->max_q(env.state_to_index(p), env.get_possible_actions(env.state_to_index(p))));
+            }
+        }
+        std::print("\n");
+    }
+}
+
+------- s_main.cpp -------
+#include "core/schedulable.hpp"
+#include "core/schedular.hpp"
+#include <cassert>
+#include <gridworld.hpp>
+#include <limits>
+#include <memory>
+#include <register.hpp>
+#include <print>
+
+void print_policy_map(std::shared_ptr<agent> agent, const gridworld::grid2D& env);
+
+int main() {
+    int w = 15;
+    int h = 15;
+    float init = 0.0f;
+
+    gridworld::grid2D env(w, h, {0, 0}, {14, 14}, {13, 13});
+    // SARSA
+    auto agent = create_agent(env.state_size(), env.action_size(), algoType::sarsa, 1.0);
+    auto ptr = std::dynamic_pointer_cast<epsilonSchedulable>(agent->behavior_policy());
+    assert(ptr != nullptr && "dynamic cast failure");
+
+    schedular<float> eps_exp_sche((ptr->epsilon()),
+        [](float val, int _) {
+            return val * 0.999954f;
+        }
+    );
+
+    int episodes = 5000000;
+
+    int max_stepped = std::numeric_limits<int>::min();
+
+    for (int i = 0; i < episodes; i++) {
+        auto cur = env.reset(true);
+        auto act = agent->sample_action(cur, env.get_possible_actions(cur));
+        bool terminate = false;
+        bool timeout = false;
+
+        int total_steps = 0;
+        float total_reward = 0.f;
+
+        while (!terminate && !timeout) {
+            auto [next_s, reward, done, possible_actions] = env.step(cur, act);
+            auto next_a = agent->sample_action(next_s, possible_actions);
+
+            agent->observe({cur, act, reward, next_s, done, timeout, possible_actions, next_a});
+
+            act = next_a;
+
+
+            cur = next_s;
+            terminate = done;
+
+            total_steps++;
+            total_reward += reward;
+
+            // if(total_steps > 5000) timeout = true;
+        }
+        eps_exp_sche.step(i);
+
+        agent->flush_buffer();
+
+        max_stepped = max_stepped < total_steps ? total_steps : max_stepped;
+
+        if ((i + 1) % 10000 == 0) {
+            std::print("EPISODE {}: TOTAL STEPS = {}, TOTAL REWARD = {}\n", i + 1, total_steps, total_reward);
+        }
+    }
+    std::print("epsilon: {}\n", eps_exp_sche.value());
+    std::println("MAXIMUM STEPS: {}", max_stepped);
+    print_policy_map(agent, env);
+}
+
+void print_policy_map(std::shared_ptr<agent> agent, const gridworld::grid2D& env) {
+    const char* symbol[] = {"↑", "↓", "←", "→"};
+    gridworld::grid2D::envState_t p{0, 0};
+
+    for (int y = env.height() - 1; y >= 0; y--) {
+        for (int x = 0; x < env.width(); x++) {
+            p.x_ = x;
+            p.y_ = y;
+
+            if (p == env.trap()) {
+                std::print("T\t");
+            } else if (p == env.goal()) {
+                std::print("G\t");
+            } else {
+                std::print("{}\t",
+                    symbol[static_cast<int>(agent->greedy_action(env.state_to_index(p), env.get_possible_actions(env.state_to_index(p))))],
+                    agent->max_q(env.state_to_index(p), env.get_possible_actions(env.state_to_index(p))));
+            }
+        }
+        std::print("\n");
+    }
+}
+
+------- q_main.cpp -------
+#include "core/schedulable.hpp"
+#include "core/schedular.hpp"
+#include <cassert>
+#include <gridworld.hpp>
+#include <memory>
+#include <register.hpp>
+#include <print>
+
+void print_policy_map(std::shared_ptr<agent> agent, const gridworld::grid2D& env);
+
+int main() {
+    int w = 15;
+    int h = 15;
+    float init = 0.0f;
+
+    gridworld::grid2D env(w, h, {0, 0}, {14,14}, {13, 13});
+    // QLEARN
+    auto agent = create_agent(env.state_size(), env.action_size(), algoType::doubleQLearning, 1.0);
+    auto ptr = std::dynamic_pointer_cast<epsilonSchedulable>(agent->behavior_policy());
+    assert(ptr != nullptr && "dynamic cast failure");
+
+    schedular<float> eps_exp_sche((ptr->epsilon()),
+        [](float val, int _) {
+            float ret = val * 0.999954f;
+            return ret < 0.1f ? 0.1f : ret;
+        }
+    );
+
+    int episodes = 1000000;
+
+    for (int i = 0; i < episodes; i++) {
+        auto cur = env.reset(true);
+        bool terminate = false;
+
+        int total_steps = 0;
+        float total_reward = 0.f;
+
+        while (!terminate) {
+            auto a = agent->sample_action(cur, env.get_possible_actions(cur));
+            auto [next_s, reward, done, possible_actions] = env.step(cur, a);
+            agent->observe({cur, a, reward, next_s, done, false, possible_actions});
+
+            cur = next_s;
+            terminate = done;
+
+            total_steps++;
+            total_reward += reward;
+        }
+        eps_exp_sche.step(i);
+
+        agent->flush_buffer();
+
+
+        if ((i + 1) % 10000 == 0) {
+            std::print("EPISODE {}: TOTAL STEPS = {}, TOTAL REWARD = {}\n", i + 1, total_steps, total_reward);
+        }
+    }
+    std::print("epsilon: {}\n",eps_exp_sche.value());
+    print_policy_map(agent, env);
+}
+
+void print_policy_map(std::shared_ptr<agent> agent, const gridworld::grid2D& env) {
+    const char* symbol[] = {"↑", "↓", "←", "→"};
+    gridworld::grid2D::envState_t p{0, 0};
+
+    for (int y = env.height() - 1; y >= 0; y--) {
+        for (int x = 0; x < env.width(); x++) {
+            p.x_ = x;
+            p.y_ = y;
+
+            if (p == env.trap()) {
+                std::print("T\t");
+            } else if (p == env.goal()) {
+                std::print("G\t");
+            } else {
+                std::print("{}\t",
+                    symbol[static_cast<int>(agent->greedy_action(env.state_to_index(p), env.get_possible_actions(env.state_to_index(p))))],
+                    agent->max_q(env.state_to_index(p), env.get_possible_actions(env.state_to_index(p))));
+            }
+        }
+        std::print("\n");
+    }
+}
+
+================================================================================
+END OF FILE
+================================================================================

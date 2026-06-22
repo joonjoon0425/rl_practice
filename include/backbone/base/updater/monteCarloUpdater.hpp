@@ -14,7 +14,7 @@ public:
       N_(state_size * action_size, 0)
       {}
 
-    void update(QTables &Q_table, const std::vector<transition> &data, float gamma, float alpha) override;
+    void update(QValueSource &Q_table, const std::vector<transition> &data, float gamma, float alpha) override;
 };
 
 class offPolicyMonteCarloUpdater : public updater {
@@ -26,7 +26,7 @@ public:
     : C_(state_size * action_size, 0)
       {}
     
-    void update(QTables &Q_table, const std::vector<transition> &data, float gamma, float alpha) override;
+    void update(QValueSource &Q_table, const std::vector<transition> &data, float gamma, float alpha) override;
 };
 
 #endif
