@@ -28,6 +28,14 @@ public:
     int index(const state_t& state, const action_t& action) {
         return state * action_size_ + action;
     }
+
+    int state_size() const {
+        return state_size_;
+    }
+
+    int action_size() const {
+        return action_size_;
+    }
 };
 
 #endif

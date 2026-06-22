@@ -1,4 +1,4 @@
-#include "base/policy/epsilongreedypolicy.hpp"
+#include "base/policy/epsilonGreedyPolicy.hpp"
 #include <cstdlib>
 #include <limits>
 
@@ -26,10 +26,12 @@ action_t epsilonGreedyPolicy::greedy_action(const QTables& Q_table_, const state
 float epsilonGreedyPolicy::get_prob(const QTables& Q_table_, const state_t& state, const action_t& action, const action_mask_t& possible_actions) const {
     action_mask_t max_actions = Q_table_.greedy_actions(state, possible_actions);
 
-    float prob = epsilon_ / possible_actions.count();
+    float prob = 0.0f;
 
     if (max_actions[action]) {
         prob += (1.f - epsilon_) / max_actions.count();
+    } else if (possible_actions[action]) {
+        prob = epsilon_ / possible_actions.count();
     }
 
     return prob;

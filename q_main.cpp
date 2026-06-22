@@ -15,7 +15,7 @@ int main() {
 
     gridworld::grid2D env(w, h, {0, 0}, {14,14}, {13, 13});
     // QLEARN
-    auto agent = create_agent(env.state_size(), env.action_size(), algoType::QLearning, 1.0);
+    auto agent = create_agent(env.state_size(), env.action_size(), algoType::expectedSarsa, 1.0);
     auto ptr = std::dynamic_pointer_cast<epsilonSchedulable>(agent->behavior_policy());
     assert(ptr != nullptr && "dynamic cast failure");
 

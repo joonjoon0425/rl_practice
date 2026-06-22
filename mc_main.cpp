@@ -22,7 +22,8 @@ int main() {
 
     schedular<float> eps_exp_sche((ptr->epsilon()),
         [](float val, int _) {
-            return val * 0.999954f;
+            float ret = val * 0.999954f;
+            return ret < 0.1f ? 0.1f : ret;
         }
     );
 

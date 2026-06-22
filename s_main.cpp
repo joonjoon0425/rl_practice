@@ -26,7 +26,7 @@ int main() {
         }
     );
 
-    int episodes = 1000000;
+    int episodes = 5000000;
 
     int max_stepped = std::numeric_limits<int>::min();
 
@@ -54,7 +54,7 @@ int main() {
             total_steps++;
             total_reward += reward;
             
-            if(total_steps > 5000) timeout = true;
+            // if(total_steps > 5000) timeout = true;
         }
         eps_exp_sche.step(i);
 
@@ -62,7 +62,7 @@ int main() {
         
         max_stepped = max_stepped < total_steps ? total_steps : max_stepped;
 
-        if ((i + 1) % 100 == 0) {
+        if ((i + 1) % 10000 == 0) {
             std::print("EPISODE {}: TOTAL STEPS = {}, TOTAL REWARD = {}\n", i + 1, total_steps, total_reward);
         }
     }

@@ -3,15 +3,16 @@
 
 #include "core/agent.hpp"
 
-#include "base/policy/greedypolicy.hpp"
-#include "base/policy/epsilongreedypolicy.hpp"
+#include "base/policy/greedyPolicy.hpp"
+#include "base/policy/epsilonGreedyPolicy.hpp"
 
-#include "base/buffer/nstepbuffer.hpp"
-#include "base/buffer/montecarlobuffer.hpp"
+#include "base/buffer/nStepBuffer.hpp"
+#include "base/buffer/monteCarloBuffer.hpp"
 
-#include "base/updater/sarsaupdater.hpp"
-#include "base/updater/qlearningupdater.hpp"
-#include "base/updater/montecarloupdater.hpp"
+#include <base/updater/sarsaUpdater.hpp>
+#include <base/updater/QLearningUpdater.hpp>
+#include <base/updater/monteCarloUpdater.hpp>
+#include <base/updater/expectedSarsaUpdater.hpp>
 
 #include "core/schedular.hpp"
 
@@ -55,6 +56,13 @@ std::shared_ptr<agent> create_agent(int state_size, int action_size, algoType a,
             b_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
             buffer = std::make_unique<monteCarloBuffer>();
             updater = std::make_unique<offPolicyMonteCarloUpdater>(state_size, action_size);
+            break;
+        case algoType::expectedSarsa:
+            t_p = std::make_shared<greedyPolicy>();
+            b_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
+            buffer = std::make_unique<nStepBuffer>(1);
+            updater = std::make_unique<expectedSarsaUpdater>(t_p);
+            break;
     }
 
 

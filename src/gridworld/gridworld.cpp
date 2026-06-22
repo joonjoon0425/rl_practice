@@ -28,13 +28,13 @@ namespace gridworld {
             case envAction_t::RIGHT: state_.x_++; break;
         };
 
-        float reward = -0.2f;
+        float reward = -2.f;
         bool done = false;
         if (state_ == goal_) {
-            reward = 15.0f;
+            reward = 100.0f;
             done = true;
         } else if (state_ == trap_) {
-            reward = -10.0f;
+            reward = -100.0f;
             done = true;
         }
 

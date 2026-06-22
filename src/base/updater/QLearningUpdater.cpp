@@ -1,4 +1,4 @@
-#include "base/updater/qlearningupdater.hpp"
+#include "base/updater/QLearningUpdater.hpp"
 #include <limits>
 
 QLearningUpdater::QLearningUpdater(){}

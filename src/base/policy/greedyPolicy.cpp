@@ -1,4 +1,4 @@
-#include "base/policy/greedypolicy.hpp"
+#include "base/policy/greedyPolicy.hpp"
 #include <cstdlib>
 #include <limits>
 
