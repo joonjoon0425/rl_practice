@@ -12,12 +12,13 @@ struct transition {
     state_t next_s_;
     bool done_;
     bool timeout_;
-    action_mask_t possible_actions;
+    action_mask_t s_possible_actions;
+    action_mask_t next_s_possible_actions;
 
     // for sarsa
-    action_t next_a_;
+    action_t next_a_ = 0;
     // for off-policy method
-    float rho_ = 1.0f;
+    float log_rho_ = 0.0f;
 };
 
 class buffer {
