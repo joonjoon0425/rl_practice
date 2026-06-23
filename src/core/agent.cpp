@@ -32,6 +32,9 @@ void agent::observe(transition data) {
     if (behavior_policy_ != target_policy_) {
         data.log_rho_ = std::log(target_policy_->get_prob(q_tables_, data.s_, data.a_, data.s_possible_actions))
         - std::log(behavior_policy_->get_prob(q_tables_, data.s_, data.a_, data.s_possible_actions));
+    // only for n step off policy sarsa
+        data.next_log_rho_ = std::log(target_policy_->get_prob(q_tables_, data.next_s_, data.next_a_, data.next_s_possible_actions))
+        - std::log(behavior_policy_->get_prob(q_tables_, data.next_s_, data.next_a_, data.next_s_possible_actions));
 
         assert(data.log_rho_ != std::numeric_limits<float>::infinity() && "log_rho_ is +inf, this action cannot be chosen by behavior policy.");
     }

@@ -28,6 +28,8 @@ add_library(gridworld
     src/core/agent.cpp
     src/core/QValueSource.cpp
     src/core/policy.cpp
+    src/base/updater/offPolicyNStepSarsaUpdater.cpp
+    src/base/updater/nStepQLearningUpdater.cpp
 )
 
 add_executable(q_main q_main.cpp)

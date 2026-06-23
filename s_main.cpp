@@ -16,7 +16,7 @@ int main() {
 
     gridworld::grid2D env(w, h, {0, 0}, {14, 14}, {13, 13});
     // SARSA
-    auto agent = create_agent(env.state_size(), env.action_size(), [&](const state_t& s){return env.get_possible_actions(s);}, algoType::nStepSarsa, 1.0, 0.9, 0.03);
+    auto agent = create_agent(env.state_size(), env.action_size(), [&](const state_t& s){return env.get_possible_actions(s);}, algoType::offPolicyNStepSarsa, 1.0, 0.9, 0.03);
     auto ptr = std::dynamic_pointer_cast<epsilonSchedulable>(agent->behavior_policy());
     assert(ptr != nullptr && "dynamic cast failure");
 

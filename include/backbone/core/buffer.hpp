@@ -14,6 +14,8 @@ struct transition {
     action_t next_a_ = 0;
     // for off-policy method
     float log_rho_ = 0.0f;
+    // for off-policy sarsa
+    float next_log_rho_ = 0.0f;
     bool done_;
     bool timeout_ = false;
     action_mask_t s_possible_actions;

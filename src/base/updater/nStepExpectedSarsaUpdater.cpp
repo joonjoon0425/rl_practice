@@ -5,6 +5,7 @@ void nStepExpectedSarsaUpdater::update(QValueSource &Q_table, const std::vector<
     int len = data.size();
     bool done = data[len - 1].done_;
     float G = 0.0f;
+    float log_rho = 0.0f;
     state_t s = data[0].s_;
     action_t a = data[0].a_;
     
@@ -18,7 +19,8 @@ void nStepExpectedSarsaUpdater::update(QValueSource &Q_table, const std::vector<
 
     for (int i = len - 1; i >= 0; i--) {
         G = data[i].r_ + gamma * G;
+        log_rho += data[i].log_rho_;
     }
 
-    Q_table(s, a) += alpha * (G - Q_table(s, a));
+    Q_table(s, a) += alpha * log_rho * (G - Q_table(s, a));
 }

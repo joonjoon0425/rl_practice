@@ -13,3 +13,5 @@
 #include <base/updater/QLearningUpdater.hpp>
 #include <base/updater/sarsaUpdater.hpp>
 #include <base/updater/nStepExpectedSarsaUpdater.hpp>
+#include <base/updater/offPolicyNStepSarsaUpdater.hpp>
+#include <base/updater/nStepQLearningUpdater.hpp>
