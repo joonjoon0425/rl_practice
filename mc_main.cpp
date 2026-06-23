@@ -58,7 +58,7 @@ int main() {
             total_steps++;
             total_reward += reward;
             
-            if(total_steps > 5000) timeout = true;
+            if(total_steps > 1000) timeout = true;
         }
         eps_exp_sche.step(i);
 

@@ -15,7 +15,7 @@ int main() {
 
     gridworld::grid2D env(w, h, {0, 0}, {14,14}, {13, 13});
     // QLEARN
-    auto agent = create_agent(env.state_size(), env.action_size(), [&](const state_t& s){return env.get_possible_actions(s);}, algoType::expectedSarsa, 1.0);
+    auto agent = create_agent(env.state_size(), env.action_size(), [&](const state_t& s){return env.get_possible_actions(s);}, algoType::nStepQLearning, 1.0, 0.9, 0.01);
     auto ptr = std::dynamic_pointer_cast<epsilonSchedulable>(agent->behavior_policy());
     assert(ptr != nullptr && "dynamic cast failure");
 
@@ -57,7 +57,7 @@ int main() {
         agent->flush_buffer();
         
 
-        if ((i + 1) % 10000 == 0) {
+        if ((i + 1) % 100 == 0) {
             std::print("EPISODE {}: TOTAL STEPS = {}, TOTAL REWARD = {}\n", i + 1, total_steps, total_reward);
         }
     }
