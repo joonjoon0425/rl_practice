@@ -16,7 +16,7 @@ int main() {
 
     gridworld::grid2D env(w, h, {0, 0}, {14, 14}, {13, 13});
     // SARSA
-    auto agent = create_agent(env.state_size(), env.action_size(), [&](const state_t& s){return env.get_possible_actions(s);}, algoType::offPolicyNStepSarsa, 1.0, 0.9, 0.03);
+    auto agent = create_agent(env.state_size(), env.action_size(), [&](const state_t& s){return env.get_possible_actions(s);}, algoType::sarsa, 1.0);
     auto ptr = std::dynamic_pointer_cast<epsilonSchedulable>(agent->behavior_policy());
     assert(ptr != nullptr && "dynamic cast failure");
 
@@ -71,7 +71,7 @@ int main() {
         
         max_stepped = max_stepped < total_steps ? total_steps : max_stepped;
 
-        if ((i + 1) % 100 == 0) {
+        if ((i + 1) % 10000 == 0) {
             std::print("EPISODE {}: TOTAL STEPS = {}, TOTAL REWARD = {}\n", i + 1, total_steps, total_reward);
         }
     }

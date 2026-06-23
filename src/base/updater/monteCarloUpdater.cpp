@@ -44,10 +44,10 @@ void offPolicyMonteCarloUpdater::update(
         float W = std::exp(log_W);
         C_[saIdx] += W;
         Q_table(data[i].s_, data[i].a_) += W / C_[saIdx] * (G - Q_table(data[i].s_, data[i].a_));
-        
-        assert(!std::isnan(data[i].log_rho_) && "log_rho_ is NaN");
-        assert(data[i].log_rho_ != std::numeric_limits<float>::infinity() && "log_rho_ is +inf, this action cannot be chosen by behavior policy.");
+        float log_rho_ = std::log(target_policy_->get_prob(Q_table, data[i].s_, data[i].a_, data[i].s_possible_actions)) - data[i].log_b_prob_;
+        assert(!std::isnan(log_rho_) && "log_rho_ is NaN");
+        assert(log_rho_ != std::numeric_limits<float>::infinity() && "log_rho_ is +inf, this action cannot be chosen by behavior policy.");
 
-        log_W += data[i].log_rho_;
+        log_W += log_rho_;
     }
 }

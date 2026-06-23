@@ -12,5 +12,5 @@
 #include <base/updater/QLearningUpdater.hpp>
 #include <base/updater/sarsaUpdater.hpp>
 #include <base/updater/nStepQLearningUpdater.hpp>
-
+#include <base/updater/treeBackupUpdater.hpp>
 #include <base/updater/nStepUpdater.hpp>

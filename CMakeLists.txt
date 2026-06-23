@@ -28,6 +28,7 @@ add_library(gridworld
     src/core/policy.cpp
     src/base/updater/nStepQLearningUpdater.cpp
     src/base/updater/nStepUpdater.cpp
+    src/base/updater/treeBackupUpdater.cpp
 )
 
 add_executable(q_main q_main.cpp)

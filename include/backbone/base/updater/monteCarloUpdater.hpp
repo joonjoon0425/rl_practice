@@ -2,6 +2,7 @@
 #define _MONTE_CARLO_UPDATER_HPP_
 
 #include <core/updater.hpp>
+#include <core/policy.hpp>
 
 class onPolicyMonteCarloUpdater : public updater {
 private:
@@ -20,10 +21,11 @@ public:
 class offPolicyMonteCarloUpdater : public updater {
 private:
     std::vector<float> C_;
-
+    std::shared_ptr<policy> target_policy_;
 public:
-    offPolicyMonteCarloUpdater(int state_size, int action_size)
-    : C_(state_size * action_size, 0)
+    offPolicyMonteCarloUpdater(std::shared_ptr<policy> target_policy, int state_size, int action_size)
+    : C_(state_size * action_size, 0),
+      target_policy_(target_policy)
       {}
     
     void update(QValueSource &Q_table, const std::vector<transition> &data, float gamma, float alpha) override;
