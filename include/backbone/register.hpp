@@ -83,26 +83,32 @@ std::shared_ptr<agent> create_agent(int state_size, int action_size, std::functi
             t_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
             b_p = t_p;
             buffer = std::make_unique<nStepBuffer>(steps);
-            updater = std::make_unique<nStepSarsaUpdater>();
+            updater = std::make_unique<nStepUpdater>(t_p, true, false);
             break;
         case algoType::onPolicyNStepExpectedSarsa:
             t_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
             b_p = t_p;
             buffer = std::make_unique<nStepBuffer>(steps);
-            updater = std::make_unique<nStepExpectedSarsaUpdater>(t_p);
+            updater = std::make_unique<nStepUpdater>(t_p, true, true);
             break;
         case algoType::offPolicyNStepSarsa:
             t_p = std::make_shared<greedyPolicy>();
             b_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
             buffer = std::make_unique<nStepBuffer>(steps);
-            updater = std::make_unique<offPolicyNStepSarsaUpdater>();
+            updater = std::make_unique<nStepUpdater>(t_p, false, false);
             break;
         case algoType::offPolicyNStepExpectedSarsa:
+            t_p = std::make_shared<greedyPolicy>();
+            b_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
+            buffer = std::make_unique<nStepBuffer>(steps);
+            updater = std::make_unique<nStepUpdater>(t_p, false, true);
+            break;
         case algoType::nStepQLearning:
             t_p = std::make_shared<greedyPolicy>();
             b_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
             buffer = std::make_unique<nStepBuffer>(steps);
             updater = std::make_unique<nStepQLearningUpdater>();
+            break;
     }
 
     return std::make_shared<agent>(state_size, action_size, get_action_mask, t_p, b_p, std::move(buffer), std::move(updater), std::move(estimator), gamma, alpha, init, table_num);

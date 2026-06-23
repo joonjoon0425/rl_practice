@@ -27,6 +27,9 @@ void agent::observe(transition data) {
     // fill in s_possible_actions and next_s_possible_actions
     data.s_possible_actions = get_action_mask_(data.s_);
     data.next_s_possible_actions = get_action_mask_(data.next_s_);
+    
+    data.log_rho_ = 0.0f;
+    data.next_log_rho_ = 0.0f;
 
     // calculate rho_ when off policy method is used
     if (behavior_policy_ != target_policy_) {

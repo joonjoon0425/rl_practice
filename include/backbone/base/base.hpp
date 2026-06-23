@@ -9,9 +9,8 @@
 #include <base/updater/doubleQLearningUpdater.hpp>
 #include <base/updater/expectedSarsaUpdater.hpp>
 #include <base/updater/monteCarloUpdater.hpp>
-#include <base/updater/nStepSarsaUpdater.hpp>
 #include <base/updater/QLearningUpdater.hpp>
 #include <base/updater/sarsaUpdater.hpp>
-#include <base/updater/nStepExpectedSarsaUpdater.hpp>
-#include <base/updater/offPolicyNStepSarsaUpdater.hpp>
 #include <base/updater/nStepQLearningUpdater.hpp>
+
+#include <base/updater/nStepUpdater.hpp>
