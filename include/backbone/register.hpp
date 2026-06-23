@@ -71,7 +71,7 @@ std::shared_ptr<agent> create_agent(int state_size, int action_size, std::functi
             t_p = std::make_shared<greedyPolicy>();
             b_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
             buffer = std::make_unique<monteCarloBuffer>();
-            updater = std::make_unique<offPolicyMonteCarloUpdater>(state_size, action_size);
+            updater = std::make_unique<offPolicyMonteCarloUpdater>(t_p, state_size, action_size);
             break;
         case algoType::onPolicyExpectedSarsa:
             t_p = std::make_shared<epsilonGreedyPolicy>(epsilon);

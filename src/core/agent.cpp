@@ -27,19 +27,17 @@ void agent::observe(transition data) {
     // fill in s_possible_actions and next_s_possible_actions
     data.s_possible_actions = get_action_mask_(data.s_);
     data.next_s_possible_actions = get_action_mask_(data.next_s_);
-    
-    data.log_rho_ = 0.0f;
-    data.next_log_rho_ = 0.0f;
 
-    // calculate rho_ when off policy method is used
+    // THIS WAS A MISTAKE!!!
+    // THIS IS WRONG ----> calculate rho_ when off policy method is used
+    // SINCE WE SHOULD CACULATE TARGET PROBABILITY OF UPDATE TIME STEP, PRE-CACULATION OF RHO IS WRONG.
+    // NOW ALMOST ALL UPDATER SHOULD HAVE TARGET POLICY
     if (behavior_policy_ != target_policy_) {
-        data.log_rho_ = std::log(target_policy_->get_prob(q_tables_, data.s_, data.a_, data.s_possible_actions))
-        - std::log(behavior_policy_->get_prob(q_tables_, data.s_, data.a_, data.s_possible_actions));
+        data.log_b_prob_ = std::log(behavior_policy_->get_prob(q_tables_, data.s_, data.a_, data.s_possible_actions));
     // only for n step off policy sarsa
-        data.next_log_rho_ = std::log(target_policy_->get_prob(q_tables_, data.next_s_, data.next_a_, data.next_s_possible_actions))
-        - std::log(behavior_policy_->get_prob(q_tables_, data.next_s_, data.next_a_, data.next_s_possible_actions));
+        data.next_log_b_prob_ = std::log(behavior_policy_->get_prob(q_tables_, data.next_s_, data.next_a_, data.next_s_possible_actions));
 
-        assert(data.log_rho_ != std::numeric_limits<float>::infinity() && "log_rho_ is +inf, this action cannot be chosen by behavior policy.");
+        // assert(data.log_rho_ != std::numeric_limits<float>::infinity() && "log_rho_ is +inf, this action cannot be chosen by behavior policy.");
     }
 
     buffer_->push_back(data);

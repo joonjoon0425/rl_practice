@@ -57,7 +57,7 @@ public:
     float& alpha() {return alpha_;}
     std::shared_ptr<policy> target_policy() {return target_policy_;}
     std::shared_ptr<policy> behavior_policy() {return behavior_policy_;};
-    
+    QValueSource& Qtable(){ return q_tables_;}
     
 
 };
