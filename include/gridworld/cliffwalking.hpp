@@ -1,10 +1,10 @@
-#ifndef _GRIDWORLD_HPP_
-#define _GRIDWORLD_HPP_
+#ifndef _CLIFF_WALKING_HPP_
+#define _CLIFF_WALKING_HPP_
 
-#include "core/env.hpp"
-#include <algorithm>
+#include <core/env.hpp>
+#include <set>
 
-namespace gridworld {
+namespace cliffWalking {
     struct point2D {
         int x_;
         int y_;
@@ -12,13 +12,18 @@ namespace gridworld {
         bool operator==(const point2D& point) const {
             return x_ == point.x_ && y_ == point.y_;
         }
+
+        bool operator<(const point2D& point) const {
+            if (x_ != point.x_) return x_ < point.x_;
+            return y_ < point.y_;
+        }
     };
 
     enum class direction2D : int {UP, DOWN, LEFT, RIGHT};
 
-    class grid2D : public environment<point2D, direction2D, grid2D> {
+    class cliff2D : public environment<point2D, direction2D, cliff2D> {
     public:
-        grid2D(int width, int height, envState_t start, envState_t goal, envState_t trap);
+        cliff2D(int width, int height, envState_t start, envState_t goal, std::set<envState_t> traps);
 
         state_t reset(bool random) override;
         std::tuple<state_t, float, bool> step(const state_t&, const action_t&) override;
@@ -29,13 +34,13 @@ namespace gridworld {
         
         envState_t start_;
         envState_t goal_;
-        envState_t trap_;
+        std::set<envState_t> traps_;
 
     public:
         int width() const {return width_;}
         int height() const {return height_;}
 
-        envState_t trap() const {return trap_;}
+        const std::set<envState_t>& traps() const {return traps_;}
         envState_t goal() const {return goal_;}
         envState_t start() const {return start_;}
 
@@ -76,5 +81,6 @@ namespace gridworld {
         }
     };
 }
+
 
 #endif

@@ -7,7 +7,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 project(rl_practice)
 add_library(gridworld
-    src/gridworld/gridworld.cpp
+    src/gridworld/cliffwalking.cpp
 
     src/base/buffer/nStepBuffer.cpp
     src/base/buffer/monteCarloBuffer.cpp
