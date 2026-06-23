@@ -82,6 +82,9 @@ float agent::max_q(const state_t& state) {
 void agent::flush_buffer() {
     auto leftover = buffer_->flush();
     if (leftover.empty() || leftover.back().timeout_) return;
-    else updater_->update(q_tables_, leftover, gamma_, alpha_);
+
+    for (int i = 0; i < leftover.size(); i++) {
+        updater_->update(q_tables_, std::vector<transition>(leftover.begin() + i, leftover.end()), gamma_, alpha_);
+    }
 }
 

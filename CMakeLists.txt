@@ -20,6 +20,8 @@ add_library(gridworld
     src/base/updater/monteCarloUpdater.cpp
     src/base/updater/expectedSarsaUpdater.cpp
     src/base/updater/doubleQLearningUpdater.cpp
+    src/base/updater/nStepSarsaUpdater.cpp
+    src/base/updater/nStepExpectedSarsaUpdater.cpp
 
     src/base/QValueEstimator/arithmeticMeanEstimator.cpp
 

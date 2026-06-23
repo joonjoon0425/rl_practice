@@ -1,31 +1,28 @@
 #ifndef _REGISTER_HPP_
 #define _REGISTER_HPP_
 
-#include "core/agent.hpp"
-
-#include "base/policy/greedyPolicy.hpp"
-#include "base/policy/epsilonGreedyPolicy.hpp"
-
 #include "base/buffer/nStepBuffer.hpp"
-#include "base/buffer/monteCarloBuffer.hpp"
-
-#include <base/updater/sarsaUpdater.hpp>
-#include <base/updater/QLearningUpdater.hpp>
-#include <base/updater/monteCarloUpdater.hpp>
-#include <base/updater/expectedSarsaUpdater.hpp>
-#include <base/updater/doubleQLearningUpdater.hpp>
-
-#include <base/QValueEstimator/arithmeticMeanEstimator.hpp>
-
-#include "core/QValueSource.hpp"
-#include "core/common.hpp"
-#include "core/schedular.hpp"
+#include "base/policy/greedyPolicy.hpp"
+#include <core/core.hpp>
+#include <base/base.hpp>
 
 #include <memory>
 
-enum class algoType {sarsa, QLearning, firstVisitOnPolicyMC, everyVisitOnPolicyMC, offPolicyMC, expectedSarsa, doubleQLearning};
+enum class algoType {
+    sarsa,
+    QLearning,
+    firstVisitOnPolicyMC,
+    everyVisitOnPolicyMC,
+    offPolicyMC,
+    offPolicyExpectedSarsa,
+    onPolicyExpectedSarsa,
+    doubleQLearning,
+    nStepSarsa,
+    offPolicyNStepExpectedSarsa,
+    onPolicyNStepExpectedSarsa
+};
 
-std::shared_ptr<agent> create_agent(int state_size, int action_size, std::function<action_mask_t(const state_t&)> get_action_mask, algoType a, float epsilon, float gamma = 0.9f, float alpha = 0.5f, float init = 0.0f) {
+std::shared_ptr<agent> create_agent(int state_size, int action_size, std::function<action_mask_t(const state_t&)> get_action_mask, algoType a, float epsilon, float gamma = 0.9f, float alpha = 0.2f, float init = 0.0f) {
     std::shared_ptr<policy> t_p = nullptr;
     std::shared_ptr<policy> b_p = nullptr;
     std::unique_ptr<buffer> buffer = nullptr;
@@ -41,6 +38,7 @@ std::shared_ptr<agent> create_agent(int state_size, int action_size, std::functi
             updater = std::make_unique<sarsaUpdater>();
             break;
         case algoType::QLearning:
+        case algoType::offPolicyExpectedSarsa:
             t_p = std::make_shared<greedyPolicy>();
             b_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
             buffer = std::make_unique<nStepBuffer>(1);
@@ -72,11 +70,29 @@ std::shared_ptr<agent> create_agent(int state_size, int action_size, std::functi
             buffer = std::make_unique<monteCarloBuffer>();
             updater = std::make_unique<offPolicyMonteCarloUpdater>(state_size, action_size);
             break;
-        case algoType::expectedSarsa:
-            t_p = std::make_shared<greedyPolicy>();
-            b_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
+        case algoType::onPolicyExpectedSarsa:
+            t_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
+            b_p = t_p;
             buffer = std::make_unique<nStepBuffer>(1);
             updater = std::make_unique<expectedSarsaUpdater>(t_p);
+            break;
+        case algoType::nStepSarsa:
+            t_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
+            b_p = t_p;
+            buffer = std::make_unique<nStepBuffer>(5);
+            updater = std::make_unique<nStepSarsaUpdater>();
+            break;
+        case algoType::onPolicyNStepExpectedSarsa:
+            t_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
+            b_p = t_p;
+            buffer = std::make_unique<nStepBuffer>(5);
+            updater = std::make_unique<nStepExpectedSarsaUpdater>(t_p);
+            break;
+        case algoType::offPolicyNStepExpectedSarsa:
+            t_p = std::make_shared<greedyPolicy>();
+            b_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
+            buffer = std::make_unique<nStepBuffer>(5);
+            updater = std::make_unique<nStepExpectedSarsaUpdater>(t_p);
             break;
     }
 

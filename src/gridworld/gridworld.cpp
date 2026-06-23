@@ -34,7 +34,7 @@ namespace gridworld {
             reward = 100.0f;
             done = true;
         } else if (state_ == trap_) {
-            reward = -50.0f;
+            reward = -100.0f;
             done = true;
         }
 
