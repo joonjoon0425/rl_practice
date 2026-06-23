@@ -4,6 +4,7 @@
 #include "base/buffer/nStepBuffer.hpp"
 #include "base/policy/epsilonGreedyPolicy.hpp"
 #include "base/policy/greedyPolicy.hpp"
+#include "base/updater/treeBackupUpdater.hpp"
 #include <core/core.hpp>
 #include <base/base.hpp>
 
@@ -22,7 +23,8 @@ enum class algoType {
     nStepQLearning,
     onPolicyNStepExpectedSarsa,
     offPolicyNStepSarsa,
-    offPolicyNStepExpectedSarsa
+    offPolicyNStepExpectedSarsa,
+    treeBackup
 };
 
 std::shared_ptr<agent> create_agent(int state_size, int action_size, std::function<action_mask_t(const state_t&)> get_action_mask, algoType a, float epsilon, float gamma = 0.9f, float alpha = 0.2f, int steps = 5, float init = 0.0f) {
@@ -108,6 +110,12 @@ std::shared_ptr<agent> create_agent(int state_size, int action_size, std::functi
             b_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
             buffer = std::make_unique<nStepBuffer>(steps);
             updater = std::make_unique<nStepQLearningUpdater>();
+            break;
+        case algoType::treeBackup:
+            t_p = std::make_shared<greedyPolicy>();
+            b_p = std::make_shared<epsilonGreedyPolicy>(epsilon);
+            buffer = std::make_unique<nStepBuffer>(steps);
+            updater = std::make_unique<treeBackupUpdater>(t_p);
             break;
     }
 
